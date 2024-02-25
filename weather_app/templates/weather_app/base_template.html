@@ -65,7 +65,7 @@
         }
 
         .full_height {
-          height: 100%;
+          height: 100%
         }
       
         /*This function handles the transition to open the sidebar */
@@ -100,20 +100,37 @@
           <!-- Navbar -->
       <div class="container-fluid justify-content-center">
 
-        <a class="navbar-brand bg-dark p-3 align-items-center full_height" href="{% url 'home' %}" style="height: 100%;">
+        <a class="navbar-brand bg-dark p-3 d-flex align-items-center" href="{% url 'home' %}">
           <img src="{% static 'weather_app/cloud.svg' %}" alt="Cloud with Sun" height="50">
           Home
         </a>
         
+        <a class="navbar-brand bg-dark p-3 d-flex align-items-center" href="{% url 'home' %}">
+          <img src="{% static 'weather_app/shirt.svg' %}" alt="Shirt" height="50">
+          Recommendations
+        </a>
+
+        <a class="navbar-brand bg-dark p-3 d-flex align-items-center" href="{% url 'home' %}">
+          <img src="{% static 'weather_app/chest.svg' %}" alt="Chest box" height="50">
+          Inventory
+        </a>
+
         <div id="mySidebar" class="sidebar">
           <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
           <a href="#">Login</a>
         </div>
 
-        <div id="main p-3 bg-dark d-flex align-items-center full_height">
-          <button class="openbtn p-3 bg-dark full_height" onclick="openNav()">☰ Weather Sidebar</button>  
-        </div>
+        <a href="javascript:void(0);" id="navbar-brand-main align-items-center p-3 bg-dark" class="p-3 bg-dark d-flex align-items-center" onclick="openNav()" style="text-decoration: none; color: white; display: block; font-size: 1.25rem;">
+          <img src="{% static 'weather_app/profile.svg' %}" alt="Profile" height="50">
+          Profile
+        </a>
 
+        <!-- 
+        <div id="navbar-brand main p-3 bg-dark d-flex align-items-center">
+          <img src="{% static 'weather_app/profile.svg' %}" alt="Key" height="50">
+          <button class="openbtn" onclick="openNav()">Profile</button>  
+        </div> -->
+        
         <script>
         function openNav() {
           document.getElementById("mySidebar").style.width = "250px";
