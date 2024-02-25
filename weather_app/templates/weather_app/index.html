@@ -19,14 +19,35 @@
 
 <!--All code goes in between the block and end content to override base template-->
 {% block content %}
-<!--Graph has been put in divider class to implement CSS-->
-<div id="graph">
-    <h1>Weather Line Chart</h1>
+
 
     <div class="container">
-      <!-- https://getbootstrap.com/docs/5.3/layout/grid/ -->
       <div class="row">
-        <canvas id="weatherChart" style="width:100%;max-width:600px"></canvas>
+        <h1 class="p-3" style="text-align: center;">Weather Based Fashion Extravaganza</h1>
+      </div>
+      
+      <!-- https://getbootstrap.com/docs/5.3/layout/grid/ -->
+      <!--Graph has been put in divider class to implement CSS-->
+      <div class="row graph justify-content-center">
+        <canvas id="weatherChart" style="width:100%;max-width:1000px;margin:auto;" style="text-align: center;"></canvas>
+      </div>
+
+      <div class="row mt-5">
+        <div class="col text-center">
+          <button type="button" class="btn text-center" style="background-color: orange; width:100%;">Toggle Temperature</button>
+        </div>
+
+        <div class="col text-center">
+          <button type="button" class="btn btn-primary text-center" style="background-color: blue; width:100%;">Toggle Precipitation</button>
+        </div>
+
+        <div class="col text-center">
+          <button type="button" class="btn text-center" style="background-color: lightblue; width:100%;">Toggle Humidity</button>
+        </div>
+
+        <div class="col text-center">
+          <button type="button" class="btn btn-primary text-center" style="background-color: green; width:100%;">Toggle Wind</button>
+        </div>
       </div>
     </div>
   
@@ -84,7 +105,6 @@
             // })
             // .catch(error => console.error('Error fetching weather data:', error));
     </script>
-  </div>
 
 
 {% endblock %}

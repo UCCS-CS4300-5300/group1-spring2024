@@ -4,34 +4,36 @@ from django.views import View
 from .models import Weather
 from datetime import datetime
 
+
 # index home page
 class WeatherView(View):
+
   def get(self, request):
     # get location from request, e.g. /?location=80918
     location = request.GET.get('location')
-    
+
     # get weather data
     weather_data = Weather.get_weather_forecast(location)
 
     # template is expecting dictionary with following values
     context = {
-      'temp_forecast': weather_data['temperature'],
-      'precipitation_forecast': weather_data['precipitation'],
-      'humidity_forecast': weather_data['humidity'],
-      'wind_forecast': weather_data['wind'],
-      'day_forecast': weather_data['hours'],
+        'temp_forecast': weather_data['temperature'],
+        'precipitation_forecast': weather_data['precipitation'],
+        'humidity_forecast': weather_data['humidity'],
+        'wind_forecast': weather_data['wind'],
+        'day_forecast': weather_data['hours'][:24],
     }
 
     return render(request, 'weather_app/index.html', context)
-      
-    
+
     # # I COMMENTED THIS OUT FOR THE TIME BEING, CHANGE IT BACK WHEN YOU WORK ON IT
+
   # # I DO NOT THINK THIS FUNCTIONALITY IS NEEDED FOR SPRINT0-3, BUT MAY BE INTERESTING FOR ITERATION 1 :)!
   # def get(self, request):
   #   # filter by day and location
   #   # day is implied to be today
-  #   # location depends on how the frontend sends it 
-    
+  #   # location depends on how the frontend sends it
+
   #   photo_path = weather.photo.path # path to image folder
   #   # switch for pulling images of the weather
   #   match weather_type:
@@ -56,10 +58,10 @@ class WeatherView(View):
   #   os.rename(photo_path, new_path) # moves the file on the file system
   #   weather.save()
   #   weather.photo.path == new_path
-        
+
   #   #location = request.GET.get('location') # Get location from request body
   #   # Parse it into whatever format we need to filter our weather by
-    
+
   #   # Below assumes we pull weather for the whole day but we can modify it later as needed by changing the timedelta values
   #   # idk how to filter location yet since we don't know how it'll be stored
   #   weather_lower_bound = datetime.date.today()

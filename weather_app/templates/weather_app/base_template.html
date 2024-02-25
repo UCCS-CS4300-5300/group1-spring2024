@@ -14,7 +14,7 @@
     <!--Code to implement the side app button for login/location input -->
     <style>
         body {
-            background-color: rgb(0, 0, 0);
+            background-color: rgb(255, 255, 255);
             font-family: "Lato", sans-serif;
         }
         .sidebar {
@@ -63,6 +63,11 @@
         .openbtn:hover {
           background-color: #444;
         }
+
+        .full_height {
+          height: 100%;
+        }
+      
         /*This function handles the transition to open the sidebar */
         #main {
           transition: margin-left .5s;
@@ -91,16 +96,22 @@
   
   
   <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-orange lead;" style="background-color: white">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-orange lead;" style="background-color: black">
           <!-- Navbar -->
-      <div class="container-fluid">
+      <div class="container-fluid justify-content-center">
+
+        <a class="navbar-brand bg-dark p-3 align-items-center full_height" href="{% url 'home' %}" style="height: 100%;">
+          <img src="{% static 'weather_app/cloud.svg' %}" alt="Cloud with Sun" height="50">
+          Home
+        </a>
+        
         <div id="mySidebar" class="sidebar">
           <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
           <a href="#">Login</a>
         </div>
 
-        <div id="main">
-          <button class="openbtn" onclick="openNav()">☰ Weather Sidebar</button>  
+        <div id="main p-3 bg-dark d-flex align-items-center full_height">
+          <button class="openbtn p-3 bg-dark full_height" onclick="openNav()">☰ Weather Sidebar</button>  
         </div>
 
         <script>
