@@ -8,9 +8,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 {% endblock %}
 
-<!--All code goes in between the block and end content to override base template -->
+<!--All code goes in between the block and end content to override base template-->
 {% block content %}
-
+<!--Graph has been put in divider class to implement CSS-->
+<div id="graph">
     <h1>Weather Line Chart</h1>
 
     <div class="container">
@@ -74,6 +75,7 @@
             // })
             // .catch(error => console.error('Error fetching weather data:', error));
     </script>
+  </div>
 
     <!-- https://docs.djangoproject.com/en/5.0/ref/templates/builtins/#json-script -->
     {{ temp_forecast|json_script:"temp_forecast" }}
