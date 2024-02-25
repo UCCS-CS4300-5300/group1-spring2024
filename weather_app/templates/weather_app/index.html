@@ -2,10 +2,19 @@
 {% extends 'weather_app/base_template.html' %}
 {% load static %}
 
-{% head content %}
+{% block head_content %}
   <title>Weather Line Chart</title>
   <!-- The way we implement the line graph -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+
+
+  <!-- https://docs.djangoproject.com/en/5.0/ref/templates/builtins/#json-script -->
+  {{ temp_forecast|json_script:"temp_forecast" }}
+  {{ precipitation_forecast|json_script:"precipitation_forecast" }}
+  {{ humidity_forecast|json_script:"humidity_forecast" }}
+  {{ wind_forecast|json_script:"wind_forecast" }}
+  {{ day_forecast|json_script:"day_forecast" }}
+
 {% endblock %}
 
 <!--All code goes in between the block and end content to override base template-->
@@ -20,7 +29,7 @@
         <canvas id="weatherChart" style="width:100%;max-width:600px"></canvas>
       </div>
     </div>
-
+  
     <script>
         // fetch('http://api.weatherapi.com/v1/forecast.json?key=3fc5bd5ea1824822846223112242402&q=London&days=10&aqi=no&alerts=no')
         //     .then(response => response.json())
@@ -76,13 +85,6 @@
             // .catch(error => console.error('Error fetching weather data:', error));
     </script>
   </div>
-
-    <!-- https://docs.djangoproject.com/en/5.0/ref/templates/builtins/#json-script -->
-    {{ temp_forecast|json_script:"temp_forecast" }}
-    {{ precipitation_forecast|json_script:"precipitation_forecast" }}
-    {{ humidity_forecast|json_script:"humidity_forecast" }}
-    {{ wind_forecast|json_script:"wind_forecast" }}
-    {{ day_forecast|json_script:"day_forecast" }}
 
 
 {% endblock %}
