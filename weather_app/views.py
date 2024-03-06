@@ -1,9 +1,54 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views import View
-from .models import Weather
+from .models import Weather, GenericClothes
 from datetime import datetime
 
+class TemperatureView(View):
+  """
+  Class to manage the connection to the temperature recommendation service.
+  """
+
+  def get(self, request):
+    """
+    Using a get request since the action does not affect persistent data
+    """
+
+    tolerance_offset = int(request.GET.get('tolerance_offset'))
+    working_offset = int(request.GET.get('working_offset'))
+    location = request.GET.get('location') # included in the sidebar?
+
+    context = {
+      "outfit": [], 
+      "comfort": []
+    }
+    
+    # User inputted the form
+    if tolerance_offset and working_offset:
+      # TODO - Change this out to get the cached current weather data for the user's location
+      weather_data = Weather.get_weather_forecast(location)
+
+      if weather_data:
+        current_temp = int(weather_data['temperature'][0])
+        current_humidity = int(weather_data['humidity'][0])
+        current_wind_speed = int(weather_data['wind'][0])
+        current_precipitation = int(weather_data['precipitation'][0])
+
+        comfort = GenericClothes.calculate_comfort(current_temp, current_humidity, current_wind_speed, tolerance_offset, working_offset)
+        outfit = GenericClothes.get_clothes_in_range(comfort)
+
+        context["outfit"] = outfit
+        context["comfort"] = comfort
+        context["tolerance_offset"] = tolerance_offset  # used as "caches" for the templates
+        context["working_offset"] = working_offset      
+
+    print(f"here {context}")
+    
+    return render(request, 'weather_app/recommendation.html', context)
+      
+
+    
+    
 
 # index home page
 class WeatherView(View):

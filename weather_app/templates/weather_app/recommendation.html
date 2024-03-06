@@ -1,0 +1,84 @@
+<!--Extends the styling of the base template -->
+{% extends 'weather_app/base_template.html' %}
+{% load static %}
+
+
+{% block head_content %}
+  <style>
+    .clothe_placeholder {
+      width: 250px;
+      height: 250px;
+      background-color: rgba(191, 191, 191, 255);
+      color: rgba(0, 0, 0, 255);
+    }
+
+    .clothe_placeholder:hover {
+      background-color: rgba(210, 210, 210, 255);
+    }
+  </style>
+
+{% endblock %}
+
+<!--All code goes in between the block and end content to override base template-->
+{% block content %}
+  
+  <div class="container p-5 mt-4" style="box-shadow: 2px 2px 4px black;">
+    <div class="row">
+      <h1 class="p-3" style="text-align: center;">Our Official Weather Recommendations</h1>
+    </div>
+    
+    <div class="row">
+      
+      <div class="col-4 offset-4 text-center">
+        <button class="btn clothe_placeholder mt-3">
+          Hats Placeholder
+        </button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-4 offset-4 text-center">
+        <button class="btn clothe_placeholder mt-3">
+          Shirts Placeholder
+        </button>
+      </div>
+      <!-- 
+      <div class="col-4">
+        <button class="btn clothe_placeholder mt-3">
+          Offhand
+        </button>        
+      </div> -->
+    </div>
+
+    <div class="row">
+      <div class="col-4 offset-4 text-center">
+        <button class="btn clothe_placeholder mt-3">
+          Pants Placeholder
+        </button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-4 offset-4 text-center">
+        <button class="btn clothe_placeholder mt-3">
+          Shoes Placeholder
+        </button>        
+      </div>
+    </div>
+    
+    <form action="/recommendation" method="get">
+        <div class="row mt-5">
+          <div class="col">
+            <label for="working_offset" class="form_label">Enter your Working Offset (in degrees F): </label>
+            <input id="working_offset" type="text" name="working_offset" placeholder="0" value="{{ context.working_offset }}" class="form-control">
+          </div>
+          <div class="col">
+            <label for="tolerance_offset" class="form_label">Enter your Tolerance Offset (in degrees F): </label>
+            <input id="tolerance_offset" type="text" name="tolerance_offset" placeholder="0" value="{{ context.tolerance_offset }}" class="form-control">
+          </div>
+          <input type="submit" value="OK" class="btn btn-primary mt-3">
+        </div>
+      </form>
+  </div>
+  
+{% endblock %}
