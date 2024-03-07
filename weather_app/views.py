@@ -14,8 +14,8 @@ class TemperatureView(View):
     Using a get request since the action does not affect persistent data
     """
 
-    tolerance_offset = int(request.GET.get('tolerance_offset'))
-    working_offset = int(request.GET.get('working_offset'))
+    tolerance_offset = request.GET.get('tolerance_offset')
+    working_offset = request.GET.get('working_offset')
     location = request.GET.get('location') # included in the sidebar?
 
     context = {
@@ -25,6 +25,10 @@ class TemperatureView(View):
     
     # User inputted the form
     if tolerance_offset and working_offset:
+
+      tolerance_offset = int(tolerance_offset)
+      working_offset = int(working_offset)
+      
       # TODO - Change this out to get the cached current weather data for the user's location
       weather_data = Weather.get_weather_forecast(location)
 
@@ -35,9 +39,10 @@ class TemperatureView(View):
         current_precipitation = int(weather_data['precipitation'][0])
 
         comfort = GenericClothes.calculate_comfort(current_temp, current_humidity, current_wind_speed, tolerance_offset, working_offset)
-        outfit = GenericClothes.get_clothes_in_range(comfort)
+        outfit_morning = GenericClothes.get_clothes_in_range(comfort)
+        outfit_morning = [clothe.name for clothe in outfit_morning]
 
-        context["outfit"] = outfit
+        context["outfit_morning"] = outfit_morning
         context["comfort"] = comfort
         context["tolerance_offset"] = tolerance_offset  # used as "caches" for the templates
         context["working_offset"] = working_offset      
