@@ -30,7 +30,7 @@ class TemperatureView(View):
         
         # TODO - Change this out to get the cached current weather data for the user's location
         weather_data = Weather.get_weather_forecast(location)
-        
+
         # All of this is formatting the weather data to be calculated in the comfort, which then gets the outfits, which then is rendered.
         # Really no business logic is here, except getting the data in the proper form.
       
@@ -66,8 +66,7 @@ class TemperatureView(View):
         context["comfort_current"] = round(comfort_current, 2)
         context["comfort_six_hours"] = round(comfort_six_hours, 2)
         context["comfort_twelve_hours"] = round(comfort_twelve_hours)
-        
-
+              
       except Exception as e:
         context["error"] = f"Error, please try again. Error message: {e}"
     

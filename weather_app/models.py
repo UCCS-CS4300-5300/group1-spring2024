@@ -22,7 +22,7 @@ class GenericClothes(models.Model):
   """
 
   # Enforces the category of clothing with choices, https://docs.djangoproject.com/en/5.0/ref/models/fields/#charfield
-  choices = {
+  clothe_choices = {
       "HAT": "Hat",
       "SHR": "Shirts and Jackets",
       "PNT": "Pants",
@@ -31,7 +31,7 @@ class GenericClothes(models.Model):
   }
 
   name = models.CharField(max_length=50)
-  clothing_type = models.CharField(max_length=3, choices=choices)
+  clothing_type = models.CharField(max_length=3, choices=clothe_choices)
   comfort_low = models.IntegerField()
   comfort_high = models.IntegerField()
   waterproof_rating = models.IntegerField()  # percentage from 1-100
@@ -72,9 +72,7 @@ class GenericClothes(models.Model):
       raise ValueError("Wind speed must be greater than or equal to 0.")
 
     if working_offset < 0:
-      raise ValueError(
-          "Working offset must be greater than or equal to 0."
-      )
+      raise ValueError("Working offset must be greater than or equal to 0.")
 
     # Calculate the adjusted feels-like temperature
     if temperature > 75:
@@ -94,8 +92,15 @@ class GenericClothes(models.Model):
     """
     Function that, given a comfort value, iterates through the current clothes in the database and returns the first set of clothes that are within the comfort range.
 
+    Comfort should be in range -460 (absolute zero) and 6100 (melting point of tungsten)
+
     Currently does not include an umbrella or waterproofing.
     """
+
+    if comfort < -460 or comfort > 6100:
+      raise ValueError(
+          "Comfort must be in range -460 (absolute zero) and 6100 (melting point of tungsten)."
+      )
 
     # comfort_low <= comfort <= comfort_high
     clothes = cls.objects.filter(comfort_low__lte=comfort,
