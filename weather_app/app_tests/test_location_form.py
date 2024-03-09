@@ -19,16 +19,16 @@ class TestLocationForm(TestCase):
     ex : GET "/location=80918" on sidebar location submit 
     """
     def test_zip_code_validation(self):
-      res = Client().get("/?location=80918")
-      assert res.status_code == 200
+      res = Client().get("/?location=81601")
+      TestCase.assertContains(self, response=res, text="81601", count=None, status_code=200, msg_prefix='', html=False)
 
     def test_zip_code_invalid(self):
       res = Client().get("/?location=0000000")
       # To follow rest compliance we return 206 which is partial content
       # in the case that location is invalid (since we still want the webpage to work)
-      assert res.status_code == 206
+      TestCase.assertContains(self, response=res, text="Please enter a valid zip code", count=None, status_code=206, msg_prefix='', html=False)
 
     def test_zip_code_empty(self):
       res = Client().get("/")
-      assert res.status_code == 200
+      TestCase.assertContains(self, response=res, text="80918", count=None, status_code=200, msg_prefix='', html=False)
 
