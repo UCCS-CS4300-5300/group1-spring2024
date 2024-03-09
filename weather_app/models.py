@@ -180,10 +180,13 @@ class Weather(models.Model):
     location_response = requests.get(base_url)
     location_data = location_response.json()
 
-    weather_response = requests.get(
-        location_data['properties']['forecastHourly'])
-    weather_data = weather_response.json()
-    return weather_data["properties"]["periods"]  # the actual weather forecast
+    if('status' not in location_data):
+      weather_response = requests.get(
+          location_data['properties']['forecastHourly'])
+      weather_data = weather_response.json()
+      return weather_data["properties"]["periods"]  # the actual weather forecast
+    else:
+      return None
 
   def _format_response(weather_data):
     """
@@ -277,4 +280,6 @@ class Weather(models.Model):
       if weather_data:
         result = Weather._format_response(weather_data)
         return result
+      else:
+        return None
     return None

@@ -97,6 +97,13 @@
   
   
   <body>
+    <script>
+      function updateFormAction(form) {
+        var locationValue = form.location.value;
+        form.action = '/' + '?location=' + encodeURIComponent(locationValue);
+      }
+    </script>
+    
     <nav class="navbar navbar-expand-lg navbar-dark bg-orange lead;" style="background-color: black">
           <!-- Navbar -->
       <div class="container-fluid justify-content-center">
@@ -119,9 +126,13 @@
         <div id="mySidebar" class="sidebar">
           <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
           <a href="#">Login</a>
+          
+          <form onsubmit="updateFormAction(this);">
           <p style="color: gray; font-size: 150%">Enter Location Here:</p>
           <input type="text" name="location">
-          <a href="#">Submit</a>
+          <!--/?location=80918 -->
+          <button type="submit">Submit Location</a>
+          </form>
         </div>
 
         <a href="javascript:void(0);" id="navbar-brand-main align-items-center p-3 bg-dark" class="p-3 bg-dark d-flex align-items-center" onclick="openNav()" style="text-decoration: none; color: white; display: block; font-size: 1.25rem;">

@@ -4,6 +4,8 @@ from django.views import View
 from django.contrib import messages
 from .models import Weather, GenericClothes
 from datetime import datetime
+from rest_framework import status
+
 
 class TemperatureView(View):
   """
@@ -84,16 +86,19 @@ class WeatherView(View):
     # get weather data
     weather_data = Weather.get_weather_forecast(location)
 
-    # template is expecting dictionary with following values
-    context = {
-        'temp_forecast': weather_data['temperature'],
-        'precipitation_forecast': weather_data['precipitation'],
-        'humidity_forecast': weather_data['humidity'],
-        'wind_forecast': weather_data['wind'],
-        'day_forecast': weather_data['hours'][:24],
-    }
-
-    return render(request, 'weather_app/index.html', context)
+    if(weather_data):
+      # template is expecting dictionary with following values
+      context = {
+          'temp_forecast': weather_data['temperature'],
+          'precipitation_forecast': weather_data['precipitation'],
+          'humidity_forecast': weather_data['humidity'],
+          'wind_forecast': weather_data['wind'],
+          'day_forecast': weather_data['hours'][:24],
+      }
+  
+      return render(request, 'weather_app/index.html', context)
+    else:
+      return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/index.html', context={'error_message': 'Please enter a valid zip code'})
 
     # # I COMMENTED THIS OUT FOR THE TIME BEING, CHANGE IT BACK WHEN YOU WORK ON IT
 

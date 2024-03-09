@@ -13,7 +13,7 @@
   {{ precipitation_forecast|json_script:"precipitation_forecast" }}
   {{ humidity_forecast|json_script:"humidity_forecast" }}
   {{ wind_forecast|json_script:"wind_forecast" }}
-  {{ day_forecast|json_script:"day_forecast" }}
+{{ day_forecast|json_script:"day_forecast" }}
 
 {% endblock %}
 
@@ -25,7 +25,9 @@
       <div class="row">
         <h1 class="p-3" style="text-align: center;">Weather Based Fashion Extravaganza</h1>
       </div>
-      
+      <div class="no-weather-data-msg" style="text-align: center; font-size: 30px; text-decoration: underline; color: red;">
+      {{ error_message}}
+      </div?
       <!-- https://getbootstrap.com/docs/5.3/layout/grid/ -->
       <!--Graph has been put in divider class to implement CSS-->
       <div class="row graph justify-content-center">
