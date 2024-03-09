@@ -22,16 +22,17 @@ class GenericClothes(models.Model):
   """
 
   # Enforces the category of clothing with choices, https://docs.djangoproject.com/en/5.0/ref/models/fields/#charfield
-  clothe_choices = {
-      "HAT": "Hat",
-      "SHR": "Shirts and Jackets",
-      "PNT": "Pants",
-      "SHO": "Shoes",
-      "MIS": "Miscellaneous"
-  }
+  CLOTHE_CHOICES = [
+      ("HAT", "Hat"),
+      ("SHR", "Shirts and Jackets"),
+      ("PNT", "Pants"),
+      ("SHO", "Shoes"),
+      ("MIS", "Miscellaneous"),
+  ]
+
 
   name = models.CharField(max_length=50)
-  clothing_type = models.CharField(max_length=3, choices=clothe_choices)
+  clothing_type = models.CharField(max_length=3, choices=CLOTHE_CHOICES)
   comfort_low = models.IntegerField()
   comfort_high = models.IntegerField()
   waterproof_rating = models.IntegerField()  # percentage from 1-100
