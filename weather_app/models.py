@@ -27,7 +27,7 @@ class GenericClothes(models.Model):
       ("SHR", "Shirts and Jackets"),
       ("PNT", "Pants"),
       ("SHO", "Shoes"),
-      ("MIS", "Miscellaneous"),
+      ("MIS", "Miscellaneous")
   ]
 
 
