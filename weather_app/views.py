@@ -94,6 +94,7 @@ class WeatherView(View):
           'humidity_forecast': weather_data['humidity'],
           'wind_forecast': weather_data['wind'],
           'day_forecast': weather_data['hours'][:24],
+          'location' : weather_data['location']
       }
   
       return render(request, 'weather_app/index.html', context)

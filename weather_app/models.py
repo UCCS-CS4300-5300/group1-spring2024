@@ -179,7 +179,7 @@ class Weather(models.Model):
     base_url = f"https://api.weather.gov/points/{latitude},{longitude}"
     location_response = requests.get(base_url)
     location_data = location_response.json()
-
+    
     if('status' not in location_data):
       weather_response = requests.get(
           location_data['properties']['forecastHourly'])
@@ -188,7 +188,7 @@ class Weather(models.Model):
     else:
       return None
 
-  def _format_response(weather_data):
+  def _format_response(weather_data, location):
     """
     Takes a format such as:
 
@@ -251,7 +251,8 @@ class Weather(models.Model):
         "temperature": temperature,
         "precipitation": precipitation,
         "humidity": humidity,
-        "wind": windSpeed
+        "wind": windSpeed,
+        "location": location
     }
 
     return result
@@ -275,10 +276,9 @@ class Weather(models.Model):
     if location:
       latitude = location.latitude
       longitude = location.longitude
-
       weather_data = Weather._get_weather(latitude, longitude)
       if weather_data:
-        result = Weather._format_response(weather_data)
+        result = Weather._format_response(weather_data, location)
         return result
       else:
         return None
