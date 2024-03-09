@@ -71,9 +71,9 @@ class GenericClothes(models.Model):
     if wind_speed < 0:
       raise ValueError("Wind speed must be greater than or equal to 0.")
 
-    if tolerance_offset < 0 or working_offset < 0:
+    if working_offset < 0:
       raise ValueError(
-          "Tolerance offset and working offset must be greater than or equal to 0."
+          "Working offset must be greater than or equal to 0."
       )
 
     # Calculate the adjusted feels-like temperature
@@ -233,7 +233,7 @@ class Weather(models.Model):
     ]
     humidity = [humid["relativeHumidity"]["value"] for humid in weather_data]
     windSpeed = [
-        windSpeed["windSpeed"].split(" ")[0] for windSpeed in weather_data
+        int(windSpeed["windSpeed"].split(" ")[0]) for windSpeed in weather_data
     ]
 
     result = {

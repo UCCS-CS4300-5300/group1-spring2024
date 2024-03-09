@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views import View
+from django.contrib import messages
 from .models import Weather, GenericClothes
 from datetime import datetime
 
@@ -11,48 +12,67 @@ class TemperatureView(View):
 
   def get(self, request):
     """
-    Using a get request since the action does not affect persistent data
+    Using a get request since the action does not affect persistent data. Based on this tutorial with django   (https://docs.djangoproject.com/en/5.0/topics/forms/)
     """
 
     tolerance_offset = request.GET.get('tolerance_offset')
     working_offset = request.GET.get('working_offset')
     location = request.GET.get('location') # included in the sidebar?
 
-    context = {
-      "outfit": [], 
-      "comfort": []
-    }
+    context = {}
     
     # User inputted the form
     if tolerance_offset and working_offset:
-
-      tolerance_offset = int(tolerance_offset)
-      working_offset = int(working_offset)
+      try:
+        
+        tolerance_offset = int(tolerance_offset)
+        working_offset = int(working_offset)
+        
+        # TODO - Change this out to get the cached current weather data for the user's location
+        weather_data = Weather.get_weather_forecast(location)
+        
+        # All of this is formatting the weather data to be calculated in the comfort, which then gets the outfits, which then is rendered.
+        # Really no business logic is here, except getting the data in the proper form.
       
-      # TODO - Change this out to get the cached current weather data for the user's location
-      weather_data = Weather.get_weather_forecast(location)
+        current_weather_data = [
+          int(weather_data[x][0]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
+        ]
 
-      if weather_data:
-        current_temp = int(weather_data['temperature'][0])
-        current_humidity = int(weather_data['humidity'][0])
-        current_wind_speed = int(weather_data['wind'][0])
-        current_precipitation = int(weather_data['precipitation'][0])
+        six_hours_weather_data = [
+          int(weather_data[x][6]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
+        ]
 
-        comfort = GenericClothes.calculate_comfort(current_temp, current_humidity, current_wind_speed, tolerance_offset, working_offset)
-        outfit_morning = GenericClothes.get_clothes_in_range(comfort)
-        outfit_morning = [clothe.name for clothe in outfit_morning]
+        twelve_hours_weather_data = [
+          int(weather_data[x][12]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
+        ]
 
-        context["outfit_morning"] = outfit_morning
-        context["comfort"] = comfort
-        context["tolerance_offset"] = tolerance_offset  # used as "caches" for the templates
-        context["working_offset"] = working_offset      
+        # asterisk unpacks the array
+        comfort_current = GenericClothes.calculate_comfort(*current_weather_data[:3], tolerance_offset, working_offset)
+        comfort_six_hours = GenericClothes.calculate_comfort(*six_hours_weather_data[:3], tolerance_offset, working_offset)
+        comfort_twelve_hours = GenericClothes.calculate_comfort(*twelve_hours_weather_data[:3], tolerance_offset, working_offset)
+        
+        outfit_current = GenericClothes.get_clothes_in_range(comfort_current)
+        outfit_six_hours = GenericClothes.get_clothes_in_range(comfort_six_hours)
+        outfit_twelve_hours = GenericClothes.get_clothes_in_range(comfort_twelve_hours)
+        
+        outfit_current = [clothe.name for clothe in outfit_current]
+        outfit_six_hours = [clothe.name for clothe in outfit_six_hours]
+        outfit_twelve_hours = [clothe.name for clothe in outfit_twelve_hours]
 
-    print(f"here {context}")
+        context["outfit_current"] = outfit_current
+        context["outfit_six_hours"] = outfit_six_hours
+        context["outfit_twelve_hours"] = outfit_twelve_hours
+
+        context["comfort_current"] = round(comfort_current, 2)
+        context["comfort_six_hours"] = round(comfort_six_hours, 2)
+        context["comfort_twelve_hours"] = round(comfort_twelve_hours)
+        
+
+      except Exception as e:
+        context["error"] = f"Error, please try again. Error message: {e}"
     
     return render(request, 'weather_app/recommendation.html', context)
       
-
-    
     
 
 # index home page

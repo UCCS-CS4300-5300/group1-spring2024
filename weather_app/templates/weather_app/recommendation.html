@@ -18,7 +18,7 @@
 
           for (let i = 0; i < inputs.length; i++) {
               let el = inputs[i];
-              if (el.tagName.toLowerCase() != "input" || el.attributes["type"].value != "text") {
+              if (el.tagName.toLowerCase() != "input") {
                   continue
               }
               let cachedVal = localStorage.getItem(el.attributes["name"].value)
@@ -47,6 +47,10 @@
 
 <!--All code goes in between the block and end content to override base template-->
 {% block content %}
+
+  {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
   
   <div class="container p-5 mt-4" style="box-shadow: 2px 2px 4px black;">
     <!-- <div class="row">
@@ -97,52 +101,59 @@
         <thead>
           <tr>
             <th scope="col">Clothe Type</th>
-            <th scope="col">Morning</th>
-            <th scope="col">Afternoon</th>
-            <th scope="col">Evening</th>
+            <th scope="col">Currently</th>
+            <th scope="col">In Six Hours</th>
+            <th scope="col">In Twelve Hours</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <th scope="row">Headwear</th>
-            <td>{{ outfit_morning.0 }}</td>
-            <td></td>
-            <td></td>
+            <td>{{ outfit_current.0 }}</td>
+            <td>{{ outfit_six_hours.0 }}</td>
+            <td>{{ outfit_twelve_hours.0 }}</td>
           </tr>
           <tr>
             <th scope="row">Shirts</th>
-            <td>{{ outfit_morning.1 }}</td>
-            <td></td>
-            <td></td>
+            <td>{{ outfit_current.1 }}</td>
+            <td>{{ outfit_six_hours.1 }}</td>
+            <td>{{ outfit_twelve_hours.1 }}</td>
           </tr>
           <tr>
             <th scope="row">Pants</th>
-            <td>{{ outfit_morning.2 }}</td>
-            <td></td>
-            <td></td>
+            <td>{{ outfit_current.2 }}</td>
+            <td>{{ outfit_six_hours.2 }}</td>
+            <td>{{ outfit_twelve_hours.2 }}</td>
           </tr>
           <tr>
             <th scope="row">Shoes</th>
-            <td>{{ outfit_morning.3 }}</td>
-            <td></td>
-            <td></td>
+            <td>{{ outfit_current.3 }}</td>
+            <td>{{ outfit_six_hours.3 }}</td>
+            <td>{{ outfit_twelve_hours.3 }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Adjusted Temperature (F°)</th>
+            <td>{{ comfort_current }}</td>
+            <td>{{ comfort_six_hours }}</td>
+            <td>{{ comfort_twelve_hours }}</td>
           </tr>
         </tbody>
       </table>
     </div>
     
     <form action="/recommendation" method="get" id="recommendation">
+      {% csrf_token %}
         <div class="row mt-5">
           <div class="col">
-            <label for="working_offset" class="form_label">Enter your Working Offset (in degrees F): </label>
-            <input id="working_offset" type="text" name="working_offset" placeholder="0" value="{{ context.working_offset }}" class="form-control" oninput="cacheInput(this)" required>
+            <label for="working_offset" class="form_label">Enter your Working Offset (F°): </label>
+            <input id="working_offset" type="number" name="working_offset" placeholder="0" value="{{ context.working_offset }}" class="form-control" oninput="cacheInput(this)" required>
             <div class="invalid-feedback">
               Please a valid offset, 0 if none.
             </div>
           </div>
           <div class="col">
-            <label for="tolerance_offset" class="form_label">Enter your Tolerance Offset (in degrees F): </label>
-            <input id="tolerance_offset" type="text" name="tolerance_offset" placeholder="0" value="{{ context.tolerance_offset }}" class="form-control" oninput="cacheInput(this)" required>
+            <label for="tolerance_offset" class="form_label">Enter your Tolerance Offset (F°): </label>
+            <input id="tolerance_offset" type="number" name="tolerance_offset" placeholder="0" value="{{ context.tolerance_offset }}" class="form-control" oninput="cacheInput(this)" required>
             <div class="invalid-feedback">
               Please a valid offset, 0 if none.
             </div>
@@ -150,6 +161,24 @@
           <input type="submit" value="OK" class="btn btn-primary mt-3">
         </div>
       </form>
+
+      <div class="row mt-5" style="text-align: left;">
+        <hr>
+        <h2 style="text-align: center;">Definitions</h2>
+        <hr>
+        <!-- Code adapted from https://www.tutorialrepublic.com/twitter-bootstrap-tutorial/bootstrap-lists.php -->
+        <dl class="row">
+            <dt class="col-sm-3">Working Offset</dt>
+            <dd class="col-sm-9">How much hotter you believe you will be while working. For example, physical exercise may increase your temperature tolerance by 10 F°. Must be positive.</dd>
+          
+            <dt class="col-sm-3 text-truncate">Tolerance Offset</dt>
+            <dd class="col-sm-9">How sensitive you are to temperature fluctuations. For example, a temperature fluctuation of 10 F° makes you feel colder than you actually are, while a flucation of -10 F° makes you feel hotter than you actually are. Can be positive or negative.</dd>
+
+            <dt class="col-sm-3 text-truncate">Adjusted Temperature</dt>
+            <dd class="col-sm-9">The "feels" like temperature accounting for the heat index, windchill, working offset, and tolerance offset. This is the temperature you will actually be comfortable in.</dd>
+        </dl>
+      </div>
+    
   </div>
   
 {% endblock %}
