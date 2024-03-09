@@ -7,6 +7,7 @@ from django.core import validators
 
 # https://docs.djangoproject.com/en/5.0/howto/initial-data/#:~:text=You%20can%20load%20data%20by,and%20reloaded%20into%20the%20database to populate the list of generic clothes
 # Must be loaded manually using python manage.py loaddata fixture_generic_clothes.json
+# Credit to ChatGPT for generating the fixtures
 class GenericClothes(models.Model):
   """
   A class holding information relating to generic clothing, such as t-shirt, cargo pants, jeans, etc. 
