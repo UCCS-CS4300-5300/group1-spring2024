@@ -1,0 +1,12 @@
+{% extends 'weather_app/base_template.html' %}
+
+{% block content %}
+  <h2>Account Registration</h2>
+
+  <form method="POST" action="">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" name="Create User" />
+  </form>
+  {{form.errors}}
+{% endblock %}
