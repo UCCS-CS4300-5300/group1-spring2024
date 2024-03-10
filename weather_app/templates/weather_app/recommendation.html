@@ -11,11 +11,11 @@
       function cacheInput(e) {
           localStorage.setItem(e.attributes["name"].value, e.value)
       }
-
+  
       window.onload = function () {
           let form = document.getElementById("recommendation");
           let inputs = form.getElementsByTagName('input');
-
+  
           for (let i = 0; i < inputs.length; i++) {
               let el = inputs[i];
               if (el.tagName.toLowerCase() != "input") {
