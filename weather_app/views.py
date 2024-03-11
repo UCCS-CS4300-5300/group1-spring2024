@@ -6,6 +6,14 @@ from .models import Weather, GenericClothes
 from datetime import datetime
 from rest_framework import status
 
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import Group
+from django.contrib import messages
+from .forms import CreateUserForm
+from typing import Any
 
 class TemperatureView(View):
   """
@@ -100,6 +108,32 @@ class WeatherView(View):
       return render(request, 'weather_app/index.html', context)
     else:
       return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/index.html', context={'error_message': 'Please enter a valid zip code'})
+
+#register for an account
+class RegisterUser(View):
+  #handle get request
+  def get(self, request):
+    #create a form instance and populate it with data from the request
+    form = CreateUserForm()
+    context = {'form': form} #context is used to pass data to the template
+    return render(request, 'registration/register.html', context) #render request for html
+
+  #handle post request
+  def post(self, request):
+    form = CreateUserForm()
+    if request.method == 'POST':
+      form = CreateUserForm(request.POST)
+      if form.is_valid():
+        user = form.save()
+        username = form.cleaned_data.get('username')
+        #create a new group for the user so that things can be admin access only
+        group = Group.objects.get(name='user__role')
+        user.groups.add(group) 
+
+        messages.success(request, 'Account was created for ' + username)
+        return redirect('login') #after successful registration, redirect to login page
+    context = {'form': form}
+    return render(request, 'registration/register.html', context) 
 
     # # I COMMENTED THIS OUT FOR THE TIME BEING, CHANGE IT BACK WHEN YOU WORK ON IT
 

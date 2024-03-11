@@ -19,6 +19,6 @@ from django.urls import path, include
 
 
 urlpatterns = [
-    path('', include('weather_app.urls')),
-    # path('/', include('weather_app.urls')) caused errors downstream
+  path('admin/', admin.site.urls),
+  path('', include('weather_app.urls')),
 ]
