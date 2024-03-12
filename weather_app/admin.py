@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import *
 
-# Register your models here.
+# Models that allow admin to input data.
+admin.site.register(GenericClothes)

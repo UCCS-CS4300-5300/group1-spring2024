@@ -1,0 +1,62 @@
+<!--Extends the styling of the base template -->
+{% extends 'weather_app/base_template.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Styling for the tables so they look nice -->
+<style>
+  td, th {
+    border: 1px solid #dddddd;
+    text-align: center;
+    padding: 8px;
+  }
+
+  tr:nth-child(even) {
+    background-color: #dddddd;
+  }
+  
+</style>
+
+<h1 style="text-align:center;">Inventory list</h1>
+
+<!-- Table used to hold the buttons that will let you add and remove items -->
+<table align="center" style="margin: 0px auto;">
+  <tr>
+    <td>
+      <a class="btn btn-secondary" href="#" role="button">Add Item</a>
+    </td>
+    <td>
+      <a class="btn btn-secondary" href="#" role="button">Remove Item</a>
+    </td>
+  </tr>
+</table>
+
+<!-- Table that will display the items on the database -->
+<table align="center" style="margin: 0px auto;">
+  <tr>
+    <th>Clothes</th>
+    <th>Type of Clothing</th>
+    <th>Color</th>
+  </tr>
+  <tr>
+    <td>Red T-Shirt</td>
+    <td>Shirt</td>
+    <td>Red</td>
+  </tr>
+  <tr>
+    <td>Blue Pants</td>
+    <td>Pants</td>
+    <td>Blue</td>
+  </tr>
+  <!-- For loop to autopopulate added items to display -->
+  {% for clothing in clothing %}
+  <tr>
+    <td>{{ clothing.name }}</td>
+    <td>{{ clothing.clothing_type }}</td>
+    <td>{{ clothing.color }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}
+

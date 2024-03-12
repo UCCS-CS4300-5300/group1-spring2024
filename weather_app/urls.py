@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from .views import WeatherView, TemperatureView, RegisterUser
+from .views import *
 
 
 urlpatterns = [
@@ -26,7 +26,7 @@ urlpatterns = [
     # But for now I think we'll extract from body since its easier
     path('', WeatherView.as_view(), name='home'),
     path('recommendation', TemperatureView.as_view(), name='recommendation'),
-    path('inventory', WeatherView.as_view(), name='inventory'),
+    path('inventory', GenericClothesListView.as_view(), name='inventory'),
 
     #user auth paths
     path('accounts/', include('django.contrib.auth.urls')),

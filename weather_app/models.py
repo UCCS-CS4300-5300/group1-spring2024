@@ -286,7 +286,7 @@ class Weather(models.Model):
         return None
     return None
 
-def get_location():
+""" def get_location():
   app = Nominatim(user_agent="Weather App")
   location_input = input("Enter your location: ")
 
@@ -327,4 +327,4 @@ def get_hourly_weather_report(latitude, longitude):
         print("{}: {}".format(forecast_time, forecast["shortForecast"]))
 
 latitude, longitude = get_location()
-get_hourly_weather_report(latitude, longitude)
+get_hourly_weather_report(latitude, longitude) """

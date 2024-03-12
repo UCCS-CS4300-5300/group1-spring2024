@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from django.views import View
+from django.views import View, generic
 from django.contrib import messages
 from .models import Weather, GenericClothes
 from datetime import datetime
@@ -81,8 +81,17 @@ class TemperatureView(View):
         context["error"] = f"Error, please try again. Error message: {e}"
     
     return render(request, 'weather_app/recommendation.html', context)
+  
+class GenericClothesListView(generic.ListView):
+  model = GenericClothes
       
-    
+class GenericClothesDetailView(generic.DetailView):
+  model = GenericClothes
+
+  def get_context_data(self, **kwargs):
+    context = super(GenericClothesDetailView, self).get_context_data(**kwargs)
+    context['genericclothes'] = GenericClothes.objects.filter(genericclothes=context['genericclothes'])
+    return context 
 
 # index home page
 class WeatherView(View):
