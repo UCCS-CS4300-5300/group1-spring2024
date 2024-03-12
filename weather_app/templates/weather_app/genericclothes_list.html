@@ -36,24 +36,28 @@
   <tr>
     <th>Clothes</th>
     <th>Type of Clothing</th>
-    <th>Color</th>
+    <th>Comfort Level</th>
+    <th>Waterproof Rating</th>
   </tr>
   <tr>
     <td>Red T-Shirt</td>
     <td>Shirt</td>
-    <td>Red</td>
+    <td>80</td>
+    <td>20</td>
   </tr>
   <tr>
     <td>Blue Pants</td>
     <td>Pants</td>
-    <td>Blue</td>
+    <td>60</td>
+    <td>60</td>
   </tr>
   <!-- For loop to autopopulate added items to display -->
-  {% for clothing in clothing %}
+  {% for geenricclothes in genericclothes %}
   <tr>
-    <td>{{ clothing.name }}</td>
-    <td>{{ clothing.clothing_type }}</td>
-    <td>{{ clothing.color }}</td>
+    <td>{{ genericclothes.name }}</td>
+    <td>{{ genericclothes.clothing_type }}</td>
+    <td>{{ genericclothes.comfort_low }}</td>
+    <td>{{ genericclothes.waterproof_rating }}</td>
   </tr>
   {% endfor %}
 </table>
