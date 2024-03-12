@@ -3,6 +3,8 @@ from geopy.geocoders import Nominatim
 import requests
 from datetime import datetime
 from django.core import validators
+import requests
+import requests_cache
 
 
 # https://docs.djangoproject.com/en/5.0/howto/initial-data/#:~:text=You%20can%20load%20data%20by,and%20reloaded%20into%20the%20database to populate the list of generic clothes
@@ -283,3 +285,46 @@ class Weather(models.Model):
       else:
         return None
     return None
+
+def get_location():
+  app = Nominatim(user_agent="Weather App")
+  location_input = input("Enter your location: ")
+
+  location = app.geocode(location_input)
+
+  latitude = location.latitude
+  longitude = location.longitude
+
+  return latitude, longitude
+
+def get_hourly_weather_report(latitude, longitude):
+    base_url = "https://api.weather.gov/points/{},{}".format(latitude, longitude)
+
+    # Fetching forecast data
+    response = requests.get(base_url)
+    if response.status_code != 200:
+        print("Failed to fetch data from API")
+        return
+
+    data = response.json()
+    forecast_url = data["properties"]["forecastHourly"]
+
+    # Fetching hourly forecast data
+    response = requests.get(forecast_url)
+    if response.status_code != 200:
+        print("Failed to fetch forecast data from API")
+        return
+
+    forecast_data = response.json()
+
+    # Extracting and printing hourly weather report
+    print("Hourly Weather Report for {}, {}".format(data["properties"]["relativeLocation"]["properties"]["city"],
+                                                   data["properties"]["relativeLocation"]["properties"]["state"]))
+    print("-" * 50)
+
+    for forecast in forecast_data["properties"]["periods"]:
+        forecast_time = datetime.strptime(forecast["startTime"], "%Y-%m-%dT%H:%M:%S%z").strftime("%H:%M")
+        print("{}: {}".format(forecast_time, forecast["shortForecast"]))
+
+latitude, longitude = get_location()
+get_hourly_weather_report(latitude, longitude)
