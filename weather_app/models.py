@@ -177,7 +177,7 @@ class Weather(models.Model):
       "detailedForecast": ""
     },
     """
-
+    requests_cache.install_cache('weather_cache', expire_after=3600)  # Cache expires after 1 hour
     base_url = f"https://api.weather.gov/points/{latitude},{longitude}"
     location_response = requests.get(base_url)
     location_data = location_response.json()
