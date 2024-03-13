@@ -1,0 +1,1 @@
+# need to have the test folder named to not "tests" otherwise django will throw and error, see https://code.djangoproject.com/ticket/22945.

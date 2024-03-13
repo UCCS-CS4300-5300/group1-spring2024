@@ -15,8 +15,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from .views import WeatherView
+from django.urls import path, include
+from .views import *
 
 
 urlpatterns = [
@@ -24,5 +24,11 @@ urlpatterns = [
     # The url below assumes location is passed in request body or something
     # If we pass in url we will extract location based on url params
     # But for now I think we'll extract from body since its easier
-    path('', WeatherView.as_view(), name='home') 
+    path('', WeatherView.as_view(), name='home'),
+    path('recommendation', TemperatureView.as_view(), name='recommendation'),
+    path('inventory', GenericClothesListView.as_view(), name='inventory'),
+
+    #user auth paths
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('accounts/register/', RegisterUser.as_view(), name = 'register'),
 ]

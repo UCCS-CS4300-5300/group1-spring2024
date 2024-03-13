@@ -1,0 +1,7 @@
+<!-- inherit from base.html -->
+{% extends 'weather_app/base_template.html' %}
+
+{% block content %}
+  <p>Logged out!</p>
+  <a href="{% url 'login'%}">Click here to login again.</a>
+{% endblock %}
