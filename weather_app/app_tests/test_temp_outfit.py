@@ -97,9 +97,11 @@ class TestGenericClothesIntegration(TestCase):
     self.assertNotIn('outfit_current', context_data)
     self.assertNotIn('outfit_six_hours', context_data)
     self.assertNotIn('outfit_twelve_hours', context_data)
+    self.assertNotIn('rain_outfit_current', context_data)
+    self.assertNotIn('rain_outfit_six_hours', context_data)
+    self.assertNotIn('rain_outfit_twelve_hours', context_data)
 
 
-  
   # happy paths
   def test_integration_temperature_generation(self):
     """
@@ -137,7 +139,7 @@ class TestGenericClothesIntegration(TestCase):
               34, 32, 31, 30, 29, 28, 28, 27, 27, 26, 25, 25
           ],
           'precipitation': [
-              13, 11, 10, 8, 6, 4, 3, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+              100, 11, 10, 8, 6, 4, 3, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -179,20 +181,17 @@ class TestGenericClothesIntegration(TestCase):
 
     # assert
     self.assertEqual(response.status_code, 200)
-    self.assertEqual(context_data['outfit_current'][0], "Thermal Running Hat")
-    self.assertEqual(context_data['outfit_current'][1], "Insulated Long Sleeve")
-    self.assertEqual(context_data['outfit_current'][2], "Fleece-Lined Softshell Pants")
-    self.assertEqual(context_data['outfit_current'][3], "Waterproof Hiking Boots")
+    self.assertEqual(context_data['outfit_current'], 
+                     ["Thermal Running Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"])
+    self.assertEqual(context_data['rain_outfit_current'], ["Umbrella", "Raincoat"])
 
-    self.assertEqual(context_data['outfit_six_hours'][0], "Thermal Running Hat")
-    self.assertEqual(context_data['outfit_six_hours'][1], "Heavy Wool Sweater")
-    self.assertEqual(context_data['outfit_six_hours'][2], "Thermal Wool Trousers")
-    self.assertEqual(context_data['outfit_six_hours'][3], "Waterproof Hiking Boots")
+    self.assertEqual(context_data['outfit_six_hours'], 
+                     ["Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers", "Waterproof Hiking Boots"])
+    self.assertEqual(context_data['rain_outfit_six_hours'], [])
 
-    self.assertEqual(context_data['outfit_twelve_hours'][0], "Thermal Running Hat")
-    self.assertEqual(context_data['outfit_twelve_hours'][1], "Heavy Wool Sweater")
-    self.assertEqual(context_data['outfit_twelve_hours'][2], "Thermal Wool Trousers")
-    self.assertEqual(context_data['outfit_twelve_hours'][3], "Waterproof Hiking Boots")
+    self.assertEqual(context_data['outfit_twelve_hours'], 
+                     ["Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers", "Waterproof Hiking Boots"])
+    self.assertEqual(context_data['rain_outfit_twelve_hours'], [])
 
   
 
@@ -202,9 +201,11 @@ class TestGenericClothesViewUnit(TestCase):
   1. Temperature Based Outfit Generation Per Data Set (Temp, Humidity, Precipitation, Wind) #38 
   2. Temperature Based Outfit Generation #14 
   3. Location Based Weather Generation Matching #33
+  4. Precipitation Based Outfit Generation #44
+
   for the view unit.
 
-  Note that the unit tests overlap a lot between these stories.
+  Note that the unit tests overlap a lot between these stories since the same code satisfies all of them. 
   """
 
   fixtures = ['fixture_generic_clothes.json']
@@ -327,6 +328,7 @@ class TestGenericClothesViewUnit(TestCase):
 
           mock_get_weather_forecast.return_value = mock_weather
           mock_calculate_comfort.return_value = mock_comfort
+          mock_get_clothes_in_range.return_value = ([], [], 0)
 
           response = self.client.get(
               reverse('recommendation'), {
@@ -347,9 +349,9 @@ class TestGenericClothesViewUnit(TestCase):
           ]
 
           expected_get_clothes_in_range_calls = [
-              call(mock_comfort),
-              call(mock_comfort),
-              call(mock_comfort)
+              call(mock_comfort, 13),
+              call(mock_comfort, 3),
+              call(mock_comfort, 0)
           ]
 
           mock_calculate_comfort.assert_has_calls(
@@ -397,7 +399,11 @@ class TestGenericClothesModelUnit(TestCase):
     Tests that a set of clothes is returned when the comfort is something reasonable (e.g. 11, 60, 105 degrees). Happy.
     """
 
-    outfit = GenericClothes.get_clothes_in_range(11)
+    # Arrange
+    comfort = 11
+    precipitation_chance = 0
+
+    outfit, rain_outfit, avg = GenericClothes.get_clothes_in_range(comfort, precipitation_chance)
     outfit_names = [clothes.name for clothes in outfit]
 
     self.assertEqual(len(outfit), 4)
@@ -405,8 +411,18 @@ class TestGenericClothesModelUnit(TestCase):
         "Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers",
         "Waterproof Hiking Boots"
     ])
+    self.assertEqual(avg, 46.25)
+    self.assertEqual(rain_outfit, [])
 
-    outfit = GenericClothes.get_clothes_in_range(60)
+  def test_get_clothes_in_range_wet(self):
+    """
+    Tests that a set of clothes is returned when the comfort is something reasonable (e.g. 11, 60, 105 degrees). Happy.
+    """
+    # Arrange
+    comfort = 60
+    precipitation_chance = 85
+  
+    outfit, rain_outfit, avg = GenericClothes.get_clothes_in_range(60, precipitation_chance)
     outfit_names = [clothes.name for clothes in outfit]
 
     self.assertEqual(len(outfit), 4)
@@ -414,8 +430,19 @@ class TestGenericClothesModelUnit(TestCase):
         "Cotton Baseball Cap", "Breathable Long Sleeve",
         "Convertible Cargo Pants", "Breathable Trail Running Shoes"
     ])
+    self.assertEqual(rain_outfit, ["Umbrella", "Raincoat"])
+    self.assertEqual(avg, 18.75)
 
-    outfit = GenericClothes.get_clothes_in_range(105)
+  def test_get_clothes_in_range_hot(self):
+    """
+    Tests that a set of clothes is returned when the comfort is something reasonable (e.g. 11, 60, 105 degrees). Happy.
+    """
+  
+    # Arrange
+    comfort = 105
+    precipitation_chance = 0
+  
+    outfit, rain_outfit, avg = GenericClothes.get_clothes_in_range(comfort, precipitation_chance)
     outfit_names = [clothes.name for clothes in outfit]
 
     self.assertEqual(len(outfit), 4)
@@ -423,17 +450,20 @@ class TestGenericClothesModelUnit(TestCase):
         "Ultra-Light Solar Shield Hat", "Mesh Ventilated Running Shirt",
         "Ventilated Mesh Shorts", "Ventilated Mesh Sandals"
     ])
+    self.assertEqual(avg, 10)
+    self.assertEqual(rain_outfit, [])
 
   def test_get_clothes_in_range_invalid(self):
     """
-    Tests that no set of clothes is returned when the comfort is something unreasonable (e.g. 20000 degrees) Sad.
+    Tests that no set of clothes is returned when the comfort is something unreasonable (e.g. 20000 degrees) or when the precipitation is an invalid number. Sad.
     """
 
     with self.assertRaises(ValueError):
-      GenericClothes.get_clothes_in_range(20000)
+      GenericClothes.get_clothes_in_range(20000, 0)
+      GenericClothes.get_clothes_in_range(-5000, 0)
+      GenericClothes.get_clothes_in_range(70, 110)
+      GenericClothes.get_clothes_in_range(70, -10)
 
-    with self.assertRaises(ValueError):
-      GenericClothes.get_clothes_in_range(-5000)
 
   def test_calculate_comfort_invalid_working_tolerance(self):
     """
@@ -555,3 +585,62 @@ class TestGenericClothesModelUnit(TestCase):
     clothe.save()
 
     self.assertEqual(clothe.comfort_low, 50)
+
+
+def test_get_clothes_in_prec_out_of_range(self):
+  """
+  Tests to ensure that, when the precipitation is above 100%, get_clothes_in_prec returns an error.
+  """
+
+  # Arrange
+  precipitation_chance = 110
+  average_waterproofing = 20
+
+  # Act / Assert
+  with self.assertRaises(ValueError):
+    outfit = GenericClothes._get_clothes_in_prec(precipitation_chance, average_waterproofing)
+
+def test_get_clothes_in_prec_wet(self):
+  """
+  Tests to ensure that, when the precipitation is above average waterproofing, get_clothes_in_prec returns an umbrella and raincoat.
+  """
+
+  # Arrange
+  precipitation_chance = 50
+  average_waterproofing = 20
+
+  # Act
+  outfit = GenericClothes._get_clothes_in_prec(precipitation_chance, average_waterproofing)
+
+  # Assert
+  self.assertEqual(outfit, ["Umbrella", "Raincoat"])
+
+def test_get_clothes_in_prec_middle(self):
+  """
+  Tests to ensure that, when the precipitation is the same as average waterproofing, get_clothes_in_prec returns an umbrella and raincoat.
+  """
+
+  # Arrange
+  precipitation_chance = 50
+  average_waterproofing = 50
+
+  # Act
+  outfit = GenericClothes._get_clothes_in_prec(precipitation_chance, average_waterproofing)
+
+  # Assert
+  self.assertEqual(outfit, ["Umbrella", "Raincoat"])
+
+def test_get_clothes_in_prec_dry(self):
+  """
+  Tests to ensure that, when the precipitation is below average waterproofing, get_clothes_in_prec does not return an umbrella and raincoat.
+  """
+
+  # Arrange
+  precipitation_chance = 10
+  average_waterproofing = 60
+
+  # Act
+  outfit = GenericClothes._get_clothes_in_prec(precipitation_chance, average_waterproofing)
+
+  # Assert
+  self.assertEqual(outfit, [])

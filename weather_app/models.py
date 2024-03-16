@@ -92,9 +92,9 @@ class GenericClothes(models.Model):
       return wind_chill - tolerance_offset + working_offset
 
   @classmethod
-  def get_clothes_in_range(cls, comfort):
+  def get_clothes_in_range(cls, comfort, precipitation_chance):
     """
-    Function that, given a comfort value, iterates through the current clothes in the database and returns the first set of clothes that are within the comfort range.
+    Function that, given a comfort value, iterates through the current clothes in the database and returns the first set of clothes that are within the comfort range, the set of clothes for precipitation, and the average waterproofing of the clothes without
 
     Comfort should be in range -460 (absolute zero) and 6100 (melting point of tungsten)
 
@@ -115,10 +115,26 @@ class GenericClothes(models.Model):
           clothes.filter(clothing_type=query)[0]
           for query in ["HAT", "SHR", "PNT", "SHO"]
       ]
+      avg = sum([outfit.waterproof_rating for outfit in outfit]) / 4
     except:  # [0] throws error when filter returns nothing
       outfit = []
+      avg = 0
 
-    return outfit
+    return outfit, cls._get_clothes_in_prec(precipitation_chance, avg), avg
+
+  @classmethod
+  def _get_clothes_in_prec(cls, precipitation_chance, average_waterproof):
+    """
+    Simple function that determines if waterproofing layers are needed based on the precipitation chance.
+    """
+    
+    if precipitation_chance < 0 or precipitation_chance > 100:
+      raise ValueError("Precipitation chance must be in range 0-100.")
+
+    if average_waterproof > precipitation_chance:
+      return []
+    elif average_waterproof <= precipitation_chance:
+      return ["Umbrella", "Raincoat"]
 
 
 class Location(models.Model):

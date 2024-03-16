@@ -38,7 +38,6 @@ class TemperatureView(View):
         tolerance_offset = int(tolerance_offset)
         working_offset = int(working_offset)
         
-        # TODO - Change this out to get the cached current weather data for the user's location
         weather_data = Weather.get_weather_forecast(location)
 
         # All of this is formatting the weather data to be calculated in the comfort, which then gets the outfits, which then is rendered.
@@ -61,21 +60,25 @@ class TemperatureView(View):
         comfort_six_hours = GenericClothes.calculate_comfort(*six_hours_weather_data[:3], tolerance_offset, working_offset)
         comfort_twelve_hours = GenericClothes.calculate_comfort(*twelve_hours_weather_data[:3], tolerance_offset, working_offset)
         
-        outfit_current = GenericClothes.get_clothes_in_range(comfort_current)
-        outfit_six_hours = GenericClothes.get_clothes_in_range(comfort_six_hours)
-        outfit_twelve_hours = GenericClothes.get_clothes_in_range(comfort_twelve_hours)
-        
-        outfit_current = [clothe.name for clothe in outfit_current]
-        outfit_six_hours = [clothe.name for clothe in outfit_six_hours]
-        outfit_twelve_hours = [clothe.name for clothe in outfit_twelve_hours]
+        outfit_current, rain_outfit_current, avg_waterproofing_current = GenericClothes.get_clothes_in_range(comfort_current, current_weather_data[3])
+        outfit_six_hours, rain_outfit_six_hours, avg_waterproofing_six_hours = GenericClothes.get_clothes_in_range(comfort_six_hours, six_hours_weather_data[3])
+        outfit_twelve_hours, rain_outfit_twelve_hours, avg_waterproofing_twelve_hours = GenericClothes.get_clothes_in_range(comfort_twelve_hours, twelve_hours_weather_data[3])
 
-        context["outfit_current"] = outfit_current
-        context["outfit_six_hours"] = outfit_six_hours
-        context["outfit_twelve_hours"] = outfit_twelve_hours
+        context["waterproofing_current"] = avg_waterproofing_current
+        context["waterproofing_six_hours"] = avg_waterproofing_six_hours
+        context["waterproofing_twelve_hours"] = avg_waterproofing_twelve_hours
+
+        context["rain_outfit_current"] = rain_outfit_current
+        context["rain_outfit_six_hours"] = rain_outfit_six_hours
+        context["rain_outfit_twelve_hours"] = rain_outfit_twelve_hours
+    
+        context["outfit_current"] = [clothe.name for clothe in outfit_current]
+        context["outfit_six_hours"] = [clothe.name for clothe in outfit_six_hours]
+        context["outfit_twelve_hours"] = [clothe.name for clothe in outfit_twelve_hours]
 
         context["comfort_current"] = round(comfort_current, 2)
         context["comfort_six_hours"] = round(comfort_six_hours, 2)
-        context["comfort_twelve_hours"] = round(comfort_twelve_hours)
+        context["comfort_twelve_hours"] = round(comfort_twelve_hours, 2)
               
       except Exception as e:
         context["error"] = f"Error, please try again. Error message: {e}"
