@@ -15,6 +15,90 @@ class TestGenericClothesIntegration(TestCase):
   """
 
   fixtures = ['fixture_generic_clothes.json']
+
+  def test_integration_temperature_generation_invalid_inputs(self):
+    """
+    Test that the movie list view returns our specific movie with the appropriate showtime. Have to stub API call since we need to determine what clothes should be worn to ensure the test is repeatable. 
+    """
+
+    # arrange
+    context = {"tolerance_offset": "nan", "working_offset": 10, "location": 10001}
+
+    # act
+    with patch('weather_app.models.Weather.get_weather_forecast'
+               ) as mock_get_weather_forecast:
+      mock_weather = {
+          'hours': [
+              18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+              13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 3, 4, 5, 6, 7,
+              8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0,
+              1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+              19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+              14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7,
+              8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0,
+              1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+              19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6
+          ],
+          'temperature': [
+              27, 26, 25, 24, 23, 22, 21, 21, 21, 20, 20, 20, 20, 22, 27, 33,
+              36, 40, 43, 47, 48, 48, 48, 47, 41, 35, 32, 29, 26, 25, 24, 23,
+              24, 23, 23, 23, 25, 29, 33, 39, 46, 51, 54, 55, 56, 57, 57, 55,
+              51, 46, 42, 39, 37, 36, 35, 34, 34, 33, 33, 34, 36, 38, 41, 45,
+              49, 53, 55, 56, 57, 58, 57, 56, 53, 49, 45, 43, 41, 40, 39, 38,
+              37, 36, 34, 34, 35, 37, 40, 44, 48, 51, 53, 54, 55, 55, 55, 54,
+              51, 48, 45, 43, 41, 40, 39, 39, 38, 37, 36, 36, 37, 38, 40, 42,
+              45, 47, 48, 48, 47, 46, 45, 43, 41, 39, 37, 35, 34, 33, 32, 32,
+              32, 31, 30, 30, 30, 30, 31, 32, 33, 34, 35, 36, 36, 36, 36, 35,
+              34, 32, 31, 30, 29, 28, 28, 27, 27, 26, 25, 25
+          ],
+          'precipitation': [
+              13, 11, 10, 8, 6, 4, 3, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+              0, 0, 2, 2, 2, 2, 2, 2, 13, 13, 13, 13, 13, 13, 17, 17, 17, 17,
+              17, 17, 27, 27, 27, 27, 27, 27, 57, 57, 57, 57, 57, 57, 73, 73,
+              73, 73, 73, 73, 70, 70, 70, 70, 70, 70, 65, 65, 65, 65, 65, 65,
+              52, 52, 52, 52, 52, 52, 37, 37, 37, 37, 37, 37, 23, 23, 23, 23,
+              23, 23, 23
+          ],
+          'humidity': [
+              76, 78, 81, 81, 84, 84, 88, 88, 84, 88, 84, 81, 81, 77, 63, 49,
+              42, 36, 32, 26, 25, 26, 27, 31, 39, 49, 56, 63, 68, 71, 74, 77,
+              74, 71, 68, 65, 60, 51, 43, 32, 23, 18, 16, 15, 16, 16, 16, 18,
+              22, 28, 34, 39, 42, 43, 45, 45, 45, 47, 47, 45, 43, 40, 37, 32,
+              26, 23, 21, 20, 20, 20, 21, 22, 26, 30, 36, 39, 42, 44, 46, 48,
+              50, 52, 54, 54, 52, 50, 44, 38, 31, 28, 26, 26, 25, 25, 24, 25,
+              29, 34, 40, 45, 50, 52, 54, 54, 57, 59, 61, 61, 59, 59, 55, 48,
+              41, 37, 34, 34, 35, 37, 38, 43, 48, 52, 59, 66, 69, 72, 75, 72,
+              72, 75, 75, 75, 75, 72, 69, 63, 58, 56, 54, 54, 54, 54, 52, 54,
+              56, 58, 61, 63, 69, 71, 68, 71, 68, 71, 74, 74
+          ],
+          'wind': [
+              10, 10, 10, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+              10, 10, 10, 10, 5, 5, 5, 5, 5, 5, 5, 10, 10, 10, 10, 10, 10, 10,
+              10, 5, 5, 5, 5, 10, 10, 10, 10, 10, 5, 5, 5, 5, 5, 5, 10, 10, 10,
+              10, 10, 10, 10, 10, 10, 10, 10, 15, 15, 15, 15, 15, 15, 15, 15,
+              15, 15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 15,
+              15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 10, 10, 10, 10, 10,
+              10, 10, 10, 10, 10, 10, 10, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+              15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 20,
+              20, 20, 20, 20, 20, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+              15, 10
+          ]
+      }
+      mock_get_weather_forecast.return_value = mock_weather
+
+      response = self.client.get(reverse('recommendation'), context)
+      context_data = response.context
+
+    # assert
+    self.assertEqual(response.status_code, 200)
+    self.assertNotIn('outfit_current', context_data)
+    self.assertNotIn('outfit_six_hours', context_data)
+    self.assertNotIn('outfit_twelve_hours', context_data)
+
+
   
   # happy paths
   def test_integration_temperature_generation(self):
@@ -23,7 +107,7 @@ class TestGenericClothesIntegration(TestCase):
     """
 
     # arrange
-    context = {"tolerance_offset": 5, "working_offset": 10}
+    context = {"tolerance_offset": 5, "working_offset": 10, "location": 10001}
 
     # act
     with patch('weather_app.models.Weather.get_weather_forecast'
@@ -110,17 +194,43 @@ class TestGenericClothesIntegration(TestCase):
     self.assertEqual(context_data['outfit_twelve_hours'][2], "Thermal Wool Trousers")
     self.assertEqual(context_data['outfit_twelve_hours'][3], "Waterproof Hiking Boots")
 
+  
 
 class TestGenericClothesViewUnit(TestCase):
   """
-  Tests user story: Temperature Based Outfit Generation Per Data Set (Temp, Humidity, Precipitation, Wind) #38 and user story: Temperature Based Outfit Generation #14 for the view unit.
+  Tests user story: 
+  1. Temperature Based Outfit Generation Per Data Set (Temp, Humidity, Precipitation, Wind) #38 
+  2. Temperature Based Outfit Generation #14 
+  3. Location Based Weather Generation Matching #33
+  for the view unit.
 
-  Note that the unit tests overlap entirely with both of these stories.
+  Note that the unit tests overlap a lot between these stories.
   """
 
   fixtures = ['fixture_generic_clothes.json']
 
+  def test_view_calls_model_without_location(self):
+    """
+    Tests that the view call the model get_weather function without a location.
+    """
 
+    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather:
+      response = self.client.get(reverse('recommendation'), {"working_offset": "0", "tolerance_offset": "0"})
+
+      self.assertEqual(response.status_code, 200)
+      mock_get_weather.assert_called_once_with(None)
+  
+  def test_view_calls_model_with_location(self):
+    """
+    Tests that the view call the model get_weather function with the correct location. Must have other parameters included to call.
+    """
+
+    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather:
+      response = self.client.get(reverse('recommendation'), {"working_offset": "0", "tolerance_offset": "0", "location": "10001"})
+  
+      self.assertEqual(response.status_code, 200)
+      mock_get_weather.assert_called_once_with('10001')
+  
   def test_view_get_should_not_call_model(self):
     """
     Tests that the view returns 200 when user input is not provided and does not call the model methods.

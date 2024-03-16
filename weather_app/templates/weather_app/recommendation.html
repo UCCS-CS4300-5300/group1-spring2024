@@ -11,8 +11,9 @@
       function cacheInput(e) {
           localStorage.setItem(e.attributes["name"].value, e.value)
       }
-  
-      window.onload = function () {
+
+
+      window.addEventListener('load', function() {
           let form = document.getElementById("recommendation");
           let inputs = form.getElementsByTagName('input');
   
@@ -27,7 +28,8 @@
               }
               console.log(cachedVal)
           }
-      }
+      });
+
   </script>
 
   <style>
@@ -157,7 +159,7 @@
             <div class="invalid-feedback">
               Please a valid offset, 0 if none.
             </div>
-          </div>
+          </div>          
           <input type="submit" value="OK" class="btn btn-primary mt-3">
         </div>
       </form>
