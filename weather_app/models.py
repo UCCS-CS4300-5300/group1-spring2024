@@ -5,6 +5,7 @@ from datetime import datetime
 from django.core import validators
 import requests
 import requests_cache
+from operator import attrgetter
 
 
 # https://docs.djangoproject.com/en/5.0/howto/initial-data/#:~:text=You%20can%20load%20data%20by,and%20reloaded%20into%20the%20database to populate the list of generic clothes
@@ -25,14 +26,9 @@ class GenericClothes(models.Model):
   """
 
   # Enforces the category of clothing with choices, https://docs.djangoproject.com/en/5.0/ref/models/fields/#charfield
-  CLOTHE_CHOICES = [
-      ("HAT", "Hat"),
-      ("SHR", "Shirts and Jackets"),
-      ("PNT", "Pants"),
-      ("SHO", "Shoes"),
-      ("MIS", "Miscellaneous")
-  ]
-
+  CLOTHE_CHOICES = [("HAT", "Hat"), ("SHR", "Shirts and Jackets"),
+                    ("PNT", "Pants"), ("SHO", "Shoes"),
+                    ("MIS", "Miscellaneous")]
 
   name = models.CharField(max_length=50)
   clothing_type = models.CharField(max_length=3, choices=CLOTHE_CHOICES)
@@ -94,40 +90,58 @@ class GenericClothes(models.Model):
   @classmethod
   def get_clothes_in_range(cls, comfort, precipitation_chance):
     """
-    Function that, given a comfort value, iterates through the current clothes in the database and returns the first set of clothes that are within the comfort range, the set of clothes for precipitation, and the average waterproofing of the clothes without
+    Function that, given a comfort value, iterates through the current clothes in the database.
+    Returns:
+    * The first set of clothes that are within the comfort range with the maximum waterproofing.
+    * The set of clothes for precipitation.
+    * The average waterproofing of the clothes.
 
     Comfort should be in range -460 (absolute zero) and 6100 (melting point of tungsten)
-
-    Currently does not include an umbrella or waterproofing.
     """
 
+    # Ensure comfort is in range
     if comfort < -460 or comfort > 6100:
       raise ValueError(
           "Comfort must be in range -460 (absolute zero) and 6100 (melting point of tungsten)."
       )
 
+    # Ensure precipitation is in range
+    if precipitation_chance < 0 or precipitation_chance > 100:
+      raise ValueError(
+        "Precipitation must be in range 0-100 (percentage)."
+      )
+
     # comfort_low <= comfort <= comfort_high
     clothes = cls.objects.filter(comfort_low__lte=comfort,
                                  comfort_high__gte=comfort)
+
     # build the outfit, little bit of metaprogramming / syntactic sugar
     try:
+
       outfit = [
-          clothes.filter(clothing_type=query)[0]
+          clothes.filter(clothing_type=query).order_by('-waterproof_rating')[0]
           for query in ["HAT", "SHR", "PNT", "SHO"]
       ]
-      avg = sum([outfit.waterproof_rating for outfit in outfit]) / 4
-    except:  # [0] throws error when filter returns nothing
-      outfit = []
-      avg = 0
 
-    return outfit, cls._get_clothes_in_prec(precipitation_chance, avg), avg
+      waterproof_average = sum([outfit.waterproof_rating
+                                for outfit in outfit]) / 4
+
+      precipitation_outfit = cls._get_clothes_in_prec(precipitation_chance, waterproof_average)
+
+    except Exception as e:  # [0] throws error when filter returns nothing
+      print(f"Error in getting clothes, {e}")
+      outfit = []
+      waterproof_avg = 0
+      precipitation_outfit = []
+
+    return (outfit, precipitation_outfit, waterproof_average)
 
   @classmethod
   def _get_clothes_in_prec(cls, precipitation_chance, average_waterproof):
     """
     Simple function that determines if waterproofing layers are needed based on the precipitation chance.
     """
-    
+
     if precipitation_chance < 0 or precipitation_chance > 100:
       raise ValueError("Precipitation chance must be in range 0-100.")
 
@@ -135,6 +149,25 @@ class GenericClothes(models.Model):
       return []
     elif average_waterproof <= precipitation_chance:
       return ["Umbrella", "Raincoat"]
+
+  # AM SAVING FOR THE LAST ITERATION - REFACTORING
+  # @classmethod
+  # def get_outfit_recommendation(cls, temperature, humidity, wind, precipitation,
+  #                               tolerance_offset, working_offset):
+  #   """
+  #   Function that combines the functionality of:
+  #   * _get_clothes_in_prec
+  #   * get_clothes_in_range
+  #   * calculate_comfort
+  #   As well as color based recommendations in the future.
+  #   This is to give the View a much cleaner model abstraction.
+
+  #   Returns:
+  #   {
+  #     "comfort": INT,
+  #     "outfit":
+  #   }
+  #   """
 
 
 class Location(models.Model):
@@ -193,16 +226,18 @@ class Weather(models.Model):
       "detailedForecast": ""
     },
     """
-    requests_cache.install_cache('weather_cache', expire_after=3600)  # Cache expires after 1 hour
+    requests_cache.install_cache(
+        'weather_cache', expire_after=3600)  # Cache expires after 1 hour
     base_url = f"https://api.weather.gov/points/{latitude},{longitude}"
     location_response = requests.get(base_url)
     location_data = location_response.json()
-    
-    if('status' not in location_data):
+
+    if ('status' not in location_data):
       weather_response = requests.get(
           location_data['properties']['forecastHourly'])
       weather_data = weather_response.json()
-      return weather_data["properties"]["periods"]  # the actual weather forecast
+      return weather_data["properties"][
+          "periods"]  # the actual weather forecast
     else:
       return None
 
@@ -301,6 +336,7 @@ class Weather(models.Model):
       else:
         return None
     return None
+
 
 """ def get_location():
   app = Nominatim(user_agent="Weather App")

@@ -212,7 +212,7 @@ class TestGenericClothesViewUnit(TestCase):
 
   def test_view_calls_model_without_location(self):
     """
-    Tests that the view call the model get_weather function without a location.
+    Tests that the view calls the model get_weather function without a location.
     """
 
     with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather:
@@ -422,16 +422,16 @@ class TestGenericClothesModelUnit(TestCase):
     comfort = 60
     precipitation_chance = 85
   
-    outfit, rain_outfit, avg = GenericClothes.get_clothes_in_range(60, precipitation_chance)
+    outfit, rain_outfit, avg = GenericClothes.get_clothes_in_range(comfort, precipitation_chance)
     outfit_names = [clothes.name for clothes in outfit]
 
     self.assertEqual(len(outfit), 4)
     self.assertEqual(outfit_names, [
-        "Cotton Baseball Cap", "Breathable Long Sleeve",
+        "Ventilated Bucket Hat", "Breathable Long Sleeve",
         "Convertible Cargo Pants", "Breathable Trail Running Shoes"
     ])
     self.assertEqual(rain_outfit, ["Umbrella", "Raincoat"])
-    self.assertEqual(avg, 18.75)
+    self.assertEqual(avg, 20.0)
 
   def test_get_clothes_in_range_hot(self):
     """
@@ -453,17 +453,23 @@ class TestGenericClothesModelUnit(TestCase):
     self.assertEqual(avg, 10)
     self.assertEqual(rain_outfit, [])
 
-  def test_get_clothes_in_range_invalid(self):
+  def test_get_clothes_in_range_invalid_temp(self):
     """
-    Tests that no set of clothes is returned when the comfort is something unreasonable (e.g. 20000 degrees) or when the precipitation is an invalid number. Sad.
+    Tests that no set of clothes is returned when the comfort is something unreasonable (e.g. 20000 degrees). Sad.
     """
 
     with self.assertRaises(ValueError):
       GenericClothes.get_clothes_in_range(20000, 0)
       GenericClothes.get_clothes_in_range(-5000, 0)
+  
+  def test_get_clothes_in_range_invalid_prec(self):
+    """
+    Tests that no set of clothes is returned when the precipitation is something unreasonable (e.g. 110%). Sad.
+    """
+
+    with self.assertRaises(ValueError):
       GenericClothes.get_clothes_in_range(70, 110)
       GenericClothes.get_clothes_in_range(70, -10)
-
 
   def test_calculate_comfort_invalid_working_tolerance(self):
     """
