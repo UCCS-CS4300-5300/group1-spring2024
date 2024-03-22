@@ -38,7 +38,7 @@ class GenericClothes(models.Model):
 
   def __str__(self):
     return self.name
-
+  
   def clean(self, *args, **kwargs):
     """
     Django’s form (and model) fields support use of utility functions and classes known as validators. A validator is a callable object or function that takes a value and returns nothing if the value is valid or raises a ValidationError if not - https://docs.djangoproject.com/en/5.0/ref/validators/
@@ -236,7 +236,7 @@ class Weather(models.Model):
     if ('status' not in location_data):
       weather_response = requests.get(
           location_data['properties']['forecastHourly'])
-      # If the api doesn't randomly break
+      # If the api doesn't randomly break continue
       # This occurs when a location is valid but the server just fails for some reason
       if(weather_response.status_code == 500):
         return None

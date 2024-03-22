@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.http import JsonResponse
 from django.views import View, generic
 from django.contrib import messages
@@ -14,6 +14,9 @@ from django.contrib.auth.models import Group
 from django.contrib import messages
 from .forms import CreateUserForm
 from typing import Any
+
+import logging
+logger = logging.getLogger("test_logger")
 
 class TemperatureView(View):
   """
@@ -85,16 +88,40 @@ class TemperatureView(View):
     
     return render(request, 'weather_app/recommendation.html', context)
   
-class GenericClothesListView(generic.ListView):
-  model = GenericClothes
-      
-class GenericClothesDetailView(generic.DetailView):
+class GenericClothesListView(View):
   model = GenericClothes
 
-  def get_context_data(self, **kwargs):
-    context = super(GenericClothesDetailView, self).get_context_data(**kwargs)
-    context['genericclothes'] = GenericClothes.objects.filter(genericclothes=context['genericclothes'])
-    return context 
+  def transform_field_name(self, field_name):
+    return field_name.capitalize().replace("_", " ")
+  
+  def get(self, request, *args, **kwargs):
+    #DATA FOR TESTING
+    # test_cloth = self.model(name="nade", clothing_type="SHO", comfort_low=10, comfort_high=20, waterproof_rating=400)
+    # test_cloth.save()
+    
+    # Get field model names for the context so frontend knows what options we can query clothing by
+    context = {}
+    field_name = request.GET.get('filterBy')
+    if(field_name == None):
+      field_name = "name" # If no filter is provided sort by name by default
+    logger.debug(field_name)
+    fields = self.model._meta.get_fields()
+    
+    context["generic_clothes_fields"] = [field.name for field in fields] # Only send field names to make filtering easier on frontend
+    context['genericclothes'] = self.model.objects.all().order_by(field_name)
+    return render(request, 'weather_app/genericclothes_list.html', context)
+      
+# class GenericClothesDetailView(generic.DetailView):
+#   model = GenericClothes
+#   template = "/weather_app/generic_clothes_detail.html"
+#   context_object_name = "objects"
+
+#   def get_queryset(self):
+#     filter_param = request.GET.get('filterBy')
+#     queryset = super().get_queryset()
+#     if filter_param:
+#       queryset = queryset.filter(your_field=filter_param)
+#     return queryset
 
 # index home page
 class WeatherView(View):
