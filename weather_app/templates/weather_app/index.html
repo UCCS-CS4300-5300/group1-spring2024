@@ -23,7 +23,7 @@
 
     <div class="container p-5 mt-4" style="box-shadow: 2px 2px 4px black;">
       <div class="row">
-        <h1 class="p-3" style="text-align: center;">Weather Based Fashion Extravaganza</h1>
+        <h1 class="p-3" style="text-align: center;"><strong>Weather Based Fashion Extravaganza</strong></h1>
       </div>
       <div class="no-weather-data-msg" style="text-align: center; font-size: 30px; text-decoration: underline; color: red;">
       {{ error_message}}
@@ -54,8 +54,12 @@
           <button type="button" class="btn btn-primary text-center" style="background-color: green; width:100%;">Toggle Wind</button>
         </div>
       </div>
+      <h4 style="padding-top:60px; padding-bottom:20px;"><strong>Description of the Weather Chart</strong></h4>
+      <p>The weather chart shown is a color coded line graph that demonstrates the entered location's hourly temperature, precipitation, humidity, and windspeed in continental time relative to the time-zone of your entered location. Hovering over each point allows a precise number for that time of day along with the units of measurement and which line you are viewing.</p>
     </div>
-  
+
+
+
     <script>
         // fetch('http://api.weatherapi.com/v1/forecast.json?key=3fc5bd5ea1824822846223112242402&q=London&days=10&aqi=no&alerts=no')
         //     .then(response => response.json())
@@ -87,24 +91,42 @@
                     labels: days,
                     datasets: [{
                       data: temp,
+                      label: 'Temperature (°F)',
                       borderColor: "orange",
                       fill: false
                     },{
                       data: precipitation,
+                      label: 'Precipitation (in.)',
                       borderColor: "blue",
                       fill: false
                     },{
                       data: humidity,
+                      label: 'Humidity (%)',
                       borderColor: "lightblue",
                       fill: false
                     },{
                       data: wind,
+                      label: 'Wind Speed (mph)',
                       borderColor: "green",
                       fill: false
                     }]
                   },
                   options: {
-                    legend: {display: false}
+                    scales: {
+                      xAxes: [{
+                        scaleLabel:{
+                          display: true,
+                          labelString: 'Hour', //labels the x axis as hours
+                          fontColor: 'black'
+                        }
+                      }]
+                    }, //axes
+                    legend: {
+                      display: true,
+                      labels: {
+                        fontColor: 'black' //legend at the top of the graph font color
+                      }
+                    }
                   }
                 });
             // })
