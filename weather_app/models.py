@@ -232,9 +232,14 @@ class Weather(models.Model):
     location_response = requests.get(base_url)
     location_data = location_response.json()
 
+    # If we don't get an invalid location
     if ('status' not in location_data):
       weather_response = requests.get(
           location_data['properties']['forecastHourly'])
+      # If the api doesn't randomly break
+      # This occurs when a location is valid but the server just fails for some reason
+      if(weather_response.status_code == 500):
+        return None
       weather_data = weather_response.json()
       return weather_data["properties"][
           "periods"]  # the actual weather forecast

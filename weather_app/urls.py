@@ -21,9 +21,7 @@ from .views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # The url below assumes location is passed in request body or something
-    # If we pass in url we will extract location based on url params
-    # But for now I think we'll extract from body since its easier
+    # The home page url assumes location is passed in the request
     path('', WeatherView.as_view(), name='home'),
     path('recommendation', TemperatureView.as_view(), name='recommendation'),
     path('inventory', GenericClothesListView.as_view(), name='inventory'),

@@ -23,9 +23,11 @@
     <!-- https://www.jajaldoang.com/post/cache-form-inputs-with-localstorage-in-javascript -->
     <!-- Caches form inputs, just put every field with oninput="cacheInput(this)" attributes -->
     <script>
+      
         function cacheInputBaseTemplate(e) {
             sessionStorage.setItem(e.attributes["name"].value, e.value)
         }
+      
 
       // Event listener is used so that other pages can have their own forms cached without overwriting each other
 
@@ -109,10 +111,10 @@
           {% endif %}
             
           <div class="row text-center">
-            <form onsubmit="updateFormAction(this);" id="location_form">
+            <form autocomplete="off" onsubmit="updateFormAction(this);" id="location_form">
               <p style="color: gray; font-size: 150%">Enter Location Here:</p>
-              <input id="location" class="form-control mx-auto" style="width: 75%;" type="text" name="location" placeholder="80918" oninput="cacheInputBaseTemplate(this)" required>
-              <!--/?location=80918 -->
+              <input id="location" class="form-control mx-auto" style="width: 75%;" type="text" name="location" placeholder="80918" oninput="cacheInputBaseTemplate(this);" required>
+              <div id="result"></div>
               <button class="btn btn-primary mx-auto mt-3" style="width: 75%;" type="submit">Submit Location</a>
             </form>
           </div>
@@ -139,6 +141,10 @@
           document.getElementById("mySidebar").style.width = "0";
           // document.getElementById("main").style.marginLeft= "0"; - was throwing error
         }
+
+          const cities = JSON.parse(document.getElementById('cities').textContent);
+          console.log(getType(cities))
+          console.log(cities)
         </script>
       </div>
     </nav>

@@ -33,6 +33,3 @@ def get_weather(api_key, latitude, longitude):
 
 result = get_weather(api_key, latitude, longitude)
 print(result)
-
-# test
-# change 2

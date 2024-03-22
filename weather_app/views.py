@@ -100,6 +100,7 @@ class GenericClothesDetailView(generic.DetailView):
 class WeatherView(View):
 
   def get(self, request):
+    
     # get location from request, e.g. /?location=80918
     location = request.GET.get('location')
 
@@ -114,12 +115,12 @@ class WeatherView(View):
           'humidity_forecast': weather_data['humidity'],
           'wind_forecast': weather_data['wind'],
           'day_forecast': weather_data['hours'][:24],
-          'location' : weather_data['location']
+          'location' : weather_data['location'],
       }
   
       return render(request, 'weather_app/index.html', context)
     else:
-      return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/index.html', context={'error_message': 'Please enter a valid zip code'})
+      return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/index.html', context={'error_message': 'Please enter a valid location'})
 
 #register for an account
 class RegisterUser(View):
