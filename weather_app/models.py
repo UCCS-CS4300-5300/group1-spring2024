@@ -54,7 +54,7 @@ class GenericClothes(models.Model):
           "Comfort low must be less than or equal to comfort high.")
 
   @classmethod
-  def calculate_comfort(cls, temperature, humidity, wind_speed,
+  def _calculate_comfort(cls, temperature, humidity, wind_speed,
                         tolerance_offset, working_offset):
     """
     Calculate the comfort level based on the temperature, humidity, and wind speed. Less of a comfort calculation and more of a adjusted feels-like temperature.
@@ -63,6 +63,8 @@ class GenericClothes(models.Model):
     * Temperature in farenheit
     * Humidity in percentage from 0-100+ (technically humidity can go beyond 100%)
     * Wind speed in miles per hour
+
+    Returns the adjusted feels-like temperature in farenheit.
     """
 
     if humidity < 0:
@@ -88,7 +90,7 @@ class GenericClothes(models.Model):
       return wind_chill - tolerance_offset + working_offset
 
   @classmethod
-  def get_clothes_in_range(cls, comfort, precipitation_chance):
+  def _get_clothes_in_temp(cls, comfort, precipitation_chance):
     """
     Function that, given a comfort value, iterates through the current clothes in the database.
     Returns:
@@ -99,16 +101,14 @@ class GenericClothes(models.Model):
     Comfort should be in range -460 (absolute zero) and 6100 (melting point of tungsten)
     """
 
+    # Define defaults in the case of errors
+    outfit = []
+    waterproof_average = 0
+    
     # Ensure comfort is in range
     if comfort < -460 or comfort > 6100:
       raise ValueError(
           "Comfort must be in range -460 (absolute zero) and 6100 (melting point of tungsten)."
-      )
-
-    # Ensure precipitation is in range
-    if precipitation_chance < 0 or precipitation_chance > 100:
-      raise ValueError(
-        "Precipitation must be in range 0-100 (percentage)."
       )
 
     # comfort_low <= comfort <= comfort_high
@@ -117,7 +117,6 @@ class GenericClothes(models.Model):
 
     # build the outfit, little bit of metaprogramming / syntactic sugar
     try:
-
       outfit = [
           clothes.filter(clothing_type=query).order_by('-waterproof_rating')[0]
           for query in ["HAT", "SHR", "PNT", "SHO"]
@@ -126,20 +125,17 @@ class GenericClothes(models.Model):
       waterproof_average = sum([outfit.waterproof_rating
                                 for outfit in outfit]) / 4
 
-      precipitation_outfit = cls._get_clothes_in_prec(precipitation_chance, waterproof_average)
-
     except Exception as e:  # [0] throws error when filter returns nothing
       print(f"Error in getting clothes, {e}")
-      outfit = []
-      waterproof_avg = 0
-      precipitation_outfit = []
 
-    return (outfit, precipitation_outfit, waterproof_average)
+    return (outfit, waterproof_average)
 
   @classmethod
   def _get_clothes_in_prec(cls, precipitation_chance, average_waterproof):
     """
     Simple function that determines if waterproofing layers are needed based on the precipitation chance.
+
+    Returns the waterproofing layers if needed
     """
 
     if precipitation_chance < 0 or precipitation_chance > 100:
@@ -150,25 +146,39 @@ class GenericClothes(models.Model):
     elif average_waterproof <= precipitation_chance:
       return ["Umbrella", "Raincoat"]
 
-  # AM SAVING FOR THE LAST ITERATION - REFACTORING
-  # @classmethod
-  # def get_outfit_recommendation(cls, temperature, humidity, wind, precipitation,
-  #                               tolerance_offset, working_offset):
-  #   """
-  #   Function that combines the functionality of:
-  #   * _get_clothes_in_prec
-  #   * get_clothes_in_range
-  #   * calculate_comfort
-  #   As well as color based recommendations in the future.
-  #   This is to give the View a much cleaner model abstraction.
+  # A major refactoring
+  @classmethod
+  def get_outfit_recommendation(cls, temperature, humidity, wind, precipitation, tolerance_offset, working_offset):
+    """
+    Function that combines the functionality of:
+    * _get_clothes_in_prec
+    * get_clothes_in_range
+    * calculate_comfort
+    As well as color based recommendations in the future.
+    This is to give the View a much cleaner model abstraction.
+    Currently, the view does too much.
 
-  #   Returns:
-  #   {
-  #     "comfort": INT,
-  #     "outfit":
-  #   }
-  #   """
+    Returns the following on a per outfit basis.
+    {
+      "comfort": INT,
+      "waterproofness": INT,
+      "outfit": ["Strings"],
+      "precipitation_clothes": ["Strings"]
+    }
+    """
 
+    context = {}
+
+    comfort = cls._calculate_comfort(temperature, humidity, wind, tolerance_offset, working_offset)
+    outfit, waterproofness = cls._get_clothes_in_temp(comfort, precipitation)
+    precipitation_clothes = cls._get_clothes_in_prec(precipitation, waterproofness)
+
+    context['comfort'] = comfort
+    context['waterproofness'] = waterproofness
+    context['outfit'] = [clothes.name for clothes in outfit]
+    context['precipitation_outfit'] = precipitation_clothes
+    
+    return context
 
 class Location(models.Model):
   name = models.CharField(max_length=30)
