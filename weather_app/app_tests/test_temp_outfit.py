@@ -183,7 +183,7 @@ class TestGenericClothesIntegration(TestCase):
     self.assertEqual(response.status_code, 200)
     self.assertEqual(context_data['outfit_current'], 
                      ["Thermal Running Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"])
-    self.assertEqual(context_data['rain_outfit_current'], ["Umbrella", "Raincoat"])
+    self.assertEqual(context_data['rain_outfit_current'], ["Umbrella", "Waterproof Tarp"])
 
     self.assertEqual(context_data['outfit_six_hours'], 
                      ["Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers", "Waterproof Hiking Boots"])
@@ -653,7 +653,7 @@ class TestGenericClothesModelUnit(TestCase):
     outfit = GenericClothes._get_clothes_in_prec(precipitation_chance, average_waterproofing)
 
     # Assert
-    self.assertEqual(outfit, ["Umbrella", "Raincoat"])
+    self.assertEqual(outfit, ["Umbrella", "Waterproof Tarp"])
 
   def test_get_clothes_in_prec_middle(self):
     """
@@ -668,7 +668,7 @@ class TestGenericClothesModelUnit(TestCase):
     outfit = GenericClothes._get_clothes_in_prec(precipitation_chance, average_waterproofing)
 
     # Assert
-    self.assertEqual(outfit, ["Umbrella", "Raincoat"])
+    self.assertEqual(outfit, ["Umbrella", "Waterproof Tarp"])
 
   def test_get_clothes_in_prec_dry(self):
     """

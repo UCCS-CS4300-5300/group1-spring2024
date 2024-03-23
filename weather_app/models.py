@@ -23,6 +23,8 @@ class GenericClothes(models.Model):
   WC = 35.74 + 0.6215T - 35.75v^{0.16} + 0.4275Tv^{0.16}, where v is the wind speed in MPH
   
   3. a waterproof rating.
+
+  I am not putting a color parameter in the GenericClothes model since they can be any color. 
   """
 
   # Enforces the category of clothing with choices, https://docs.djangoproject.com/en/5.0/ref/models/fields/#charfield
@@ -144,7 +146,8 @@ class GenericClothes(models.Model):
     if average_waterproof > precipitation_chance:
       return []
     elif average_waterproof <= precipitation_chance:
-      return ["Umbrella", "Raincoat"]
+      outfit = cls.objects.filter(clothing_type="MIS")
+      return [clothe.name for clothe in outfit]
 
   # A major refactoring
   @classmethod
