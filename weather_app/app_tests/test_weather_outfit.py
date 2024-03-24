@@ -1,13 +1,12 @@
 from typing import Generic
 from django.test import TestCase
 from ..models import GenericClothes
-from datetime import datetime
+import datetime
 from django.utils.timezone import make_aware
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from unittest.mock import patch, call
 from django.urls import reverse
-import json
-
+from .. import models
 
 class TestGenericClothesIntegration(TestCase):
   """
@@ -100,20 +99,37 @@ class TestGenericClothesIntegration(TestCase):
     self.assertNotIn('rain_outfit_current', context_data)
     self.assertNotIn('rain_outfit_six_hours', context_data)
     self.assertNotIn('rain_outfit_twelve_hours', context_data)
+    self.assertNotIn('colors_current', context_data)
 
 
   # happy paths
   def test_integration_temperature_generation(self):
     """
     Have to stub API call since we need to determine what clothes should be worn to ensure the test is repeatable. 
+
+    Also have to stub the dates since they can change the result of the tests over time.
     """
 
+    class NewDate(datetime.date):
+      @classmethod
+      def today(cls):
+        return cls(2022, 10, 22)
+
+    class NewDatetime(datetime.datetime):
+      @classmethod
+      def now(cls):
+        mock_datetime = cls(2022, 10, 22, 12, 0, 0, 0)
+        return mock_datetime
+    
     # arrange
-    context = {"tolerance_offset": 5, "working_offset": 10, "location": 10001}
+    context = {"tolerance_offset": 5, "working_offset": 10, "location": 10001, "checkbox_colors": "on"}
 
     # act
-    with patch('weather_app.models.Weather.get_weather_forecast'
-               ) as mock_get_weather_forecast:
+    with (
+      patch.object(models, 'date', NewDate),
+      patch.object(models, 'datetime', NewDatetime),
+      patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather_forecast
+    ):
       mock_weather = {
           'hours': [
               18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
@@ -192,6 +208,7 @@ class TestGenericClothesIntegration(TestCase):
     self.assertEqual(context_data['outfit_twelve_hours'], 
                      ["Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers", "Waterproof Hiking Boots"])
     self.assertEqual(context_data['rain_outfit_twelve_hours'], [])
+    self.assertEqual(context_data['colors_current'], ["orange", "red", "brown", "goldenrod", "olive"])
 
   
   def test_normal_get_outfit_recommendation(self):
@@ -201,8 +218,23 @@ class TestGenericClothesIntegration(TestCase):
     * Happy Test    
     """
 
-    # need to patch to avoid API calls
-    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather_forecast:
+    class NewDate(datetime.date):
+      @classmethod
+      def today(cls):
+        return cls(2022, 10, 22)
+
+    class NewDatetime(datetime.datetime):
+      @classmethod
+      def now(cls):
+        mock_datetime = cls(2022, 10, 22, 12, 0, 0, 0)
+        return mock_datetime
+
+    # need to patch to avoid API calls and ensure dates are repeatable
+    with (
+      patch.object(models, 'date', NewDate),
+      patch.object(models, 'datetime', NewDatetime),
+      patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather_forecast
+    ):
       mock_weather = {
         'hours': [
           18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
@@ -278,7 +310,8 @@ class TestGenericClothesIntegration(TestCase):
         "comfort": 46.04,
         "waterproofness": 68.75,
         "outfit": ['Breathable Sun Hat', 'Water-Resistant Softshell', 'Water-Resistant Hiking Pants', 'Waterproof Hiking Boots'],
-        "precipitation_outfit": []
+        "precipitation_outfit": [],
+        "colors": ["orange", "red", "brown", "goldenrod", "olive"]
       }
   
       # Act
@@ -324,6 +357,19 @@ class TestGenericClothesViewUnit(TestCase):
 
   fixtures = ['fixture_generic_clothes.json']
 
+  def test_view_returns_color_when_selected(self):
+    """
+    Tests that the view returns the colors when the setting is chosen
+    """
+
+    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather:
+      response = self.client.get(reverse('recommendation'), {"working_offset": "0", "tolerance_offset": "0", "checkbox_colors": "on"})
+
+      context_data = response.context
+        
+      self.assertEqual(response.status_code, 200)
+      self.assertIn("colors_current", context_data)
+  
   def test_view_calls_model_without_location(self):
     """
     Tests that the view calls the model get_weather function without a location.
@@ -457,6 +503,7 @@ class TestGenericClothesViewUnit(TestCase):
         mock_get_outfit_recommendation.assert_has_calls(expected_recommendation_calls, any_order=False)
         mock_get_weather_forecast.assert_has_calls(expected_weather_calls, any_order=False)
 
+  
   def test_view_get_with_invalid_params_should_throw_error(self):
     """
     Tests that the view returns 200 when incorrect user input is provided and includes an error passed to the template.
@@ -481,13 +528,16 @@ class TestGenericClothesViewUnit(TestCase):
 
 class TestGenericClothesModelUnit(TestCase):
   """
-  Tests user story: Temperature Based Outfit Generation Per Data Set (Temp, Humidity, Precipitation, Wind) #38 and user story: Temperature Based Outfit Generation #14.
+  Tests user stories: 
+  * Temperature Based Outfit Generation Per Data Set (Temp, Humidity, Precipitation, Wind) #38 
+  * Temperature Based Outfit Generation #14
+  * Precipitation Based Outfit Generation #44
 
-  Note that the unit tests overlap entirely with both of these stories.
+  Note that the unit tests overlap with the model so it did not make much sense to separate the classes. 
   """
 
   fixtures = ['fixture_generic_clothes.json']
-
+  
   # --------------------------- get_outfit_recommendation ---------------------------
   
   def test_get_outfit_recommendation(self):
@@ -502,7 +552,8 @@ class TestGenericClothesModelUnit(TestCase):
     with (
       patch('weather_app.models.GenericClothes._calculate_comfort') as mock_cc,
       patch('weather_app.models.GenericClothes._get_clothes_in_temp') as mock_temp,
-      patch('weather_app.models.GenericClothes._get_clothes_in_prec') as mock_prec
+      patch('weather_app.models.GenericClothes._get_clothes_in_prec') as mock_prec,
+      patch('weather_app.models.GenericClothes._get_color_palette') as mock_color
     ):
 
       # Arrange
@@ -520,6 +571,7 @@ class TestGenericClothesModelUnit(TestCase):
       mock_cc.return_value = 10
       mock_temp.return_value = (test_outfit_1, 100)
       mock_prec.return_value = ['some more clothes']
+      mock_color.return_value = ['some colors']
 
       mock_cc_calls = [call(temp, humidity, wind, tolerance_offset, working_offset)]
       mock_temp_calls = [call(mock_cc.return_value, precipitation)]
@@ -528,7 +580,8 @@ class TestGenericClothesModelUnit(TestCase):
         "comfort": mock_cc.return_value,
         "waterproofness": mock_temp.return_value[1],
         "outfit": [test_clothe_1.name],
-        "precipitation_outfit": ['some more clothes']
+        "precipitation_outfit": ['some more clothes'],
+        "colors": ['some colors']
       }
       
       # Act
@@ -539,6 +592,7 @@ class TestGenericClothesModelUnit(TestCase):
       mock_cc.assert_has_calls(mock_cc_calls, any_order=False)
       mock_temp.assert_has_calls(mock_temp_calls, any_order=False)
       mock_prec.assert_has_calls(mock_prec_calls, any_order=False)
+      mock_color.assert_called()
   
   # ---------------------------------------------------------------------------------
 
@@ -813,4 +867,6 @@ class TestGenericClothesModelUnit(TestCase):
 
     self.assertEqual(clothe.comfort_low, 50)
 
-    # ---------------------------------------------------------------------------------
+  # ---------------------------------------------------------------------------------
+
+ 

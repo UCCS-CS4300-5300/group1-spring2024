@@ -30,7 +30,8 @@ class TemperatureView(View):
 
     tolerance_offset = request.GET.get('tolerance_offset')
     working_offset = request.GET.get('working_offset')
-    location = request.GET.get('location') # included in the sidebar?
+    location = request.GET.get('location') # included in the sidebar
+    color_selected = request.GET.get('checkbox_colors')
 
     context = {}
     
@@ -77,6 +78,9 @@ class TemperatureView(View):
         context["outfit_current"] = current['outfit']
         context["outfit_six_hours"] = six_hours['outfit']
         context["outfit_twelve_hours"] = twelve_hours['outfit']
+
+        if color_selected:
+          context["colors_current"] = current['colors']
               
       except Exception as e:
         context["error"] = f"Error, please try again. Error message: {e}"

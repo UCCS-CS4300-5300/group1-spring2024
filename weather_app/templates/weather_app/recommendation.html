@@ -9,9 +9,20 @@
   <!-- Caches form inputs, just put every field with oninput="cacheInput(this)" attributes -->
   <script>
       function cacheInput(e) {
-          localStorage.setItem(e.attributes["name"].value, e.value)
+          localStorage.setItem(e.attributes["name"].value, e.value);
       }
 
+      // function populate_color_table() {
+      //   let color_table = document.getElementById("color_table");
+      //   let colors = JSON.parse(document.getElementById('colors').textContent);
+      //   let row = color_table.insertRow(-1);
+        
+      //   for (let i = 0; i < colors.length; i++) {
+      //     let cell = row.insertCell(-1);
+      //     cell.innerHTML = colors[i];
+      //     cell.style.backgroundColor = colors[i];
+      //   }
+      // }
 
       window.addEventListener('load', function() {
           let form = document.getElementById("recommendation");
@@ -22,11 +33,11 @@
               if (el.tagName.toLowerCase() != "input") {
                   continue
               }
-              let cachedVal = localStorage.getItem(el.attributes["name"].value)
+              let cachedVal = localStorage.getItem(el.attributes["name"].value);
               if (cachedVal != null) {
                   el.value = cachedVal;
               }
-              console.log(cachedVal)
+              console.log(cachedVal);
           }
       });
 
@@ -43,7 +54,23 @@
     .clothe_placeholder:hover {
       background-color: rgba(210, 210, 210, 255);
     }
+
+    .color {
+      transition: all 0.5s ease;
+      color: rgba(0, 0, 0, 0) !important; 
+      text-align: center; 
+      font-weight: bold; 
+    }
+    
+    .color:hover {
+      background-color: white !important;
+      color: rgba(0, 0, 0, 255) !important;
+    }
+
+    
   </style>
+
+  {{ colors_current|json_script:"colors" }}
 
 {% endblock %}
 
@@ -55,6 +82,11 @@
   {% endif %}
   
   <div class="container p-5 mt-4" style="box-shadow: 2px 2px 4px black;">
+    <div class="row" style="text-align: left;">
+      <hr>
+      <h2 style="text-align: center;">Outfit Recommendation</h2>
+      <hr>
+    </div>
     <!-- <div class="row">
       <h1 class="p-3" style="text-align: center;">Our Official Weather Recommendations</h1>
     </div>
@@ -154,9 +186,27 @@
         </tbody>
       </table>
     </div>
+
+    {% if colors_current %}
+      <div class="row mt-5">
+        <hr>
+        <h2 style="text-align: center;">Recommended Color Palette</h2>
+        <hr>
+      </div>
+      
+      <div class="row">
+        <table class="table">
+          <tbody id="color_table">
+            <!-- https://www.geeksforgeeks.org/for-loop-django-template-tags/ -->
+            {% for color in colors_current %}
+              <td class="color" style="background-color: {{ color }};">{{ color }}</td>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
     
     <form action="/recommendation" method="get" id="recommendation">
-      {% csrf_token %}
         <div class="row mt-5">
           <div class="col">
             <label for="working_offset" class="form_label">Enter your Working Offset (F°): </label>
@@ -171,7 +221,13 @@
             <div class="invalid-feedback">
               Please a valid offset, 0 if none.
             </div>
-          </div>          
+          </div>     
+
+          <div class="mt-3 btn-group" role="group" aria-label="Toggle color palette recommendation">
+            <input name="checkbox_colors" type="checkbox" class="btn-check" id="checkbox_colors" autocomplete="off" oninput="cacheInput(this)">
+            <label class="btn btn-outline-success" for="checkbox_colors">Color Palette Recommendations</label>
+          </div>
+          
           <input type="submit" value="OK" class="btn btn-primary mt-3">
         </div>
       </form>

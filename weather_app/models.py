@@ -1,11 +1,9 @@
-from django.db import models
-from geopy.geocoders import Nominatim
-import requests
-from datetime import datetime
-from django.core import validators
+from datetime import date, datetime
 import requests
 import requests_cache
-from operator import attrgetter
+from django.core import validators
+from django.db import models
+from geopy.geocoders import Nominatim
 
 
 # https://docs.djangoproject.com/en/5.0/howto/initial-data/#:~:text=You%20can%20load%20data%20by,and%20reloaded%20into%20the%20database to populate the list of generic clothes
@@ -157,16 +155,17 @@ class GenericClothes(models.Model):
     * _get_clothes_in_prec
     * get_clothes_in_range
     * calculate_comfort
-    As well as color based recommendations in the future.
+    * _get_color_palette
+    
     This is to give the View a much cleaner model abstraction.
-    Currently, the view does too much.
 
     Returns the following on a per outfit basis.
     {
       "comfort": INT,
       "waterproofness": INT,
       "outfit": ["Strings"],
-      "precipitation_clothes": ["Strings"]
+      "precipitation_clothes": ["Strings"],
+      "colors": ["Strings"] (e.g., "red")
     }
     """
 
@@ -175,13 +174,48 @@ class GenericClothes(models.Model):
     comfort = cls._calculate_comfort(temperature, humidity, wind, tolerance_offset, working_offset)
     outfit, waterproofness = cls._get_clothes_in_temp(comfort, precipitation)
     precipitation_clothes = cls._get_clothes_in_prec(precipitation, waterproofness)
-
+    colors = cls._get_color_palette()
+    
     context['comfort'] = comfort
     context['waterproofness'] = waterproofness
     context['outfit'] = [clothes.name for clothes in outfit]
     context['precipitation_outfit'] = precipitation_clothes
+    context['colors'] = colors
     
     return context
+
+  @classmethod
+  def _get_color_palette(cls):
+    """
+    Function that takes into account the current season and returns up to 5 colors.
+    """
+
+    # courtesy of ChatGPT
+    colors = {
+        "winter": ["silver", "blue", "gray", "white", "darkgreen"],
+        "spring": ["pink", "lightgreen", "lavender", "yellow", "turquoise"],
+        "summer": ["yellow", "aqua", "skyblue", "coral", "limegreen"],
+        "autumn": ["orange", "red", "brown", "goldenrod", "olive"]
+    }
+    
+    try:
+      year = datetime.now().year
+      
+      # https://stackoverflow.com/questions/16139306/determine-season-given-timestamp-in-python-using-datetime
+      seasons = [('winter', (date(year,  1,  1),  date(year,  3, 20))),
+                 ('spring', (date(year,  3, 21),  date(year,  6, 20))),
+                 ('summer', (date(year,  6, 21),  date(year,  9, 22))),
+                 ('autumn', (date(year,  9, 23),  date(year, 12, 20))),
+                 ('winter', (date(year, 12, 21),  date(year, 12, 31)))]
+    
+      today = date.today()
+      season = [season for season, (start, end) in seasons if start <= today <= end][0]
+      return colors[season]
+      
+    except Exception as e:  # should be impossible
+      print(f"Error {e}")
+      return colors["winter"]
+
 
 class Location(models.Model):
   name = models.CharField(max_length=30)
