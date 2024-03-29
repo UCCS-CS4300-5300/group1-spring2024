@@ -1,5 +1,5 @@
 from django.shortcuts import redirect, render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views import View, generic
 from django.contrib import messages
 from .models import Weather, GenericClothes
@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib import messages
-from .forms import CreateUserForm
+from .forms import *
 from typing import Any
 
 import logging
@@ -174,7 +174,36 @@ class RegisterUser(View):
     context = {'form': form}
     return render(request, 'registration/register.html', context) 
 
-    # # I COMMENTED THIS OUT FOR THE TIME BEING, CHANGE IT BACK WHEN YOU WORK ON IT
+#adds items to inventory
+def addItem(request):
+    form = AddForm()
+
+    if request.method == 'POST':
+
+      form = AddForm(request.POST)
+
+      if form.is_valid():
+        post = form.save(commit=False)
+        post.save()
+
+        return redirect('inventory')
+
+    context = {'form': form}
+    return render(request, 'weather_app/add_item.html', context)
+
+#deletes an item from the inventory
+def deleteItem(request, id):
+  post = GenericClothes.objects.get(id = id)
+
+  if request.method == 'POST':
+    post.delete()
+    return redirect('inventory')
+  
+  context = {'item': post}
+  return render(request, 'weather_app/delete_item.html', context)
+
+
+# # I COMMENTED THIS OUT FOR THE TIME BEING, CHANGE IT BACK WHEN YOU WORK ON IT
 
   # # I DO NOT THINK THIS FUNCTIONALITY IS NEEDED FOR SPRINT0-3, BUT MAY BE INTERESTING FOR ITERATION 1 :)!
   # def get(self, request):

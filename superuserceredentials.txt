@@ -1,0 +1,3 @@
+Username: testingadmin
+Email: testing@admin.com
+Password: Testing123
