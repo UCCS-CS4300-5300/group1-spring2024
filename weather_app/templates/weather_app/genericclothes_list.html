@@ -40,12 +40,14 @@
         {% endfor %}
       </select>
     </td>
-    
+    <td>
+      <input type="text" id="search-input" onkeyup="searchClothesChart()" placeholder="Search...">
+    </td>
   </tr>
 </table>
 
 <!-- Table that will display the items on the database -->
-<table align="center" class="clothes-list-table" style="margin: 0px auto;">
+<table id="inv-table" align="center" class="clothes-list-table" style="margin: 0px auto;">
   <tr>
     <th>Clothes</th>
     <th>Type of Clothing</th>
@@ -95,6 +97,26 @@
   });
   }
   })
+function searchClothesChart() {
+    var input, filter, table, tr, td, i, txtValue;
+    input = document.getElementById("search-input");
+    filter = input.value.toUpperCase();
+    table = document.getElementById("inv-table");
+    tr = table.getElementsByTagName("tr");
+
+    // Loop through all table rows, and hide those who don't match the search query
+    for (i = 0; i < tr.length; i++) {
+      td = tr[i].getElementsByTagName("td")[0];
+      if (td) {
+        txtValue = td.textContent || td.innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+          tr[i].style.display = "";
+        } else {
+          tr[i].style.display = "none";
+        }
+      }
+    }
+  }
 </script>
 {% endblock %}
 
