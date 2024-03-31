@@ -64,6 +64,11 @@
               console.log(cachedVal)
           }
         });
+
+      function updateFormAction(form) {
+        var locationValue = form.location.value;
+        form.action = '/' + '?location=' + encodeURIComponent(locationValue);
+      }
     </script>
 
     
@@ -74,16 +79,7 @@
 
   </head>
   
-  
-  <body>
-    <script>
-      function updateFormAction(form) {
-        var locationValue = form.location.value;
-        form.action = '/' + '?location=' + encodeURIComponent(locationValue);
-      }
-    </script>
-
-    
+  <body>    
     <nav class="navbar navbar-expand-lg navbar-dark bg-orange lead;" style="background-color: black">
           <!-- Navbar -->
       <div class="container-fluid justify-content-center">
