@@ -1,3 +1,5 @@
+# **!!! Note !!!**: SOME OF THE USERNAMES IN GITHUB GOT MESSED UP, E.G., LoganZeien VS lzeien, WHEN FINDING OUT WHO COMMITED WHAT LOOK AT THE COMMIT HISTORY INSTEAD OF SORTING BY USERS!
+
 # Weather Based Fashion App 
 
 ## Contributors:
@@ -8,4 +10,4 @@
 * Andres Puga - Pugachuu
 * Logan Zeien - LoganZeien or lzeien
 
-**!!! Note !!!**: SOME OF THE USERNAMES IN GITHUB GOT MESSED UP, E.G., LoganZeien VS lzeien, WHEN FINDING OUT WHO COMMITED WHAT LOOK AT THE COMMIT HISTORY INSTEAD OF SORTING BY USERS!
+
