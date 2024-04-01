@@ -166,7 +166,7 @@ class RegisterUser(View):
         user = form.save()
         username = form.cleaned_data.get('username')
         #create a new group for the user so that things can be admin access only
-        group = Group.objects.get(name='user__role')
+        group = Group.objects.get_or_create(name='user__role')[0]
         user.groups.add(group) 
 
         messages.success(request, 'Account was created for ' + username)
