@@ -26,7 +26,7 @@ class TestLocationForm(TestCase):
       res = Client().get("/?location=0000000")
       # To follow rest compliance we return 206 which is partial content
       # in the case that location is invalid (since we still want the webpage to work)
-      TestCase.assertContains(self, response=res, text="Please enter a valid zip code", count=None, status_code=206, msg_prefix='', html=False)
+      TestCase.assertContains(self, response=res, text="Please enter a valid location", count=None, status_code=206, msg_prefix='', html=False)
 
     def test_zip_code_empty(self):
       res = Client().get("/")

@@ -1,0 +1,12 @@
+{% extends 'weather_app/base_template.html' %}
+
+{% block content %}
+<p> Are you sure you want to delete "{{item}}"?</p>
+
+<form action = "" method='POST'>
+{% csrf_token %}
+<a href="{% url 'inventory' %}"> Cancel</a>
+<input type = "submit" name="Confirm">
+</form>
+
+{% endblock %}

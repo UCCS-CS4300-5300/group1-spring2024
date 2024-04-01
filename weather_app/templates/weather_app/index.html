@@ -7,109 +7,114 @@
   <!-- The way we implement the line graph -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 
-
   <!-- https://docs.djangoproject.com/en/5.0/ref/templates/builtins/#json-script -->
   {{ temp_forecast|json_script:"temp_forecast" }}
   {{ precipitation_forecast|json_script:"precipitation_forecast" }}
   {{ humidity_forecast|json_script:"humidity_forecast" }}
   {{ wind_forecast|json_script:"wind_forecast" }}
-{{ day_forecast|json_script:"day_forecast" }}
+  {{ day_forecast|json_script:"day_forecast" }}
 
 {% endblock %}
 
 <!--All code goes in between the block and end content to override base template-->
 {% block content %}
-
-
-    <div class="container p-5 mt-4" style="box-shadow: 2px 2px 4px black;">
-      <div class="row">
-        <h1 class="p-3" style="text-align: center;">Weather Based Fashion Extravaganza</h1>
-      </div>
-      <div class="no-weather-data-msg" style="text-align: center; font-size: 30px; text-decoration: underline; color: red;">
-      {{ error_message}}
-      </div>
-      <div class="location-header mt-2 mb-4" style="text-align: center; font-size: 30px; font-style: italic; color: threeddarkshadow;">
-      {{ location}}
-</div>
-      <!-- https://getbootstrap.com/docs/5.3/layout/grid/ -->
-      <!--Graph has been put in divider class to implement CSS-->
-      <div class="row graph justify-content-center">
-        <canvas id="weatherChart" style="width:100%;max-width:1000px;margin:auto;" style="text-align: center;"></canvas>
-      </div>
-
-      <div class="row mt-5">
-        <div class="col text-center">
-          <button type="button" class="btn text-center" style="background-color: orange; width:100%;">Toggle Temperature</button>
-        </div>
-
-        <div class="col text-center">
-          <button type="button" class="btn btn-primary text-center" style="background-color: blue; width:100%;">Toggle Precipitation</button>
-        </div>
-
-        <div class="col text-center">
-          <button type="button" class="btn text-center" style="background-color: lightblue; width:100%;">Toggle Humidity</button>
-        </div>
-
-        <div class="col text-center">
-          <button type="button" class="btn btn-primary text-center" style="background-color: green; width:100%;">Toggle Wind</button>
-        </div>
-      </div>
-    </div>
+  <div class="row">
+    <h1 class="p-3" style="text-align: center;"><strong>Weather Based Fashion Extravaganza</strong></h1>
+  </div>
+  <div class="no-weather-data-msg" style="text-align: center; font-size: 30px; text-decoration: underline; color: red;">
+    {{ error_message}}
+  </div>
+  <div class="location-header mt-2 mb-4" style="text-align: center; font-size: 30px; font-style: italic; color: threeddarkshadow;">
+    {{ location}}
+  </div>
   
-    <script>
-        // fetch('http://api.weatherapi.com/v1/forecast.json?key=3fc5bd5ea1824822846223112242402&q=London&days=10&aqi=no&alerts=no')
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         console.log(data);
+  <!-- https://getbootstrap.com/docs/5.3/layout/grid/ -->
+  <!--Graph has been put in divider class to implement CSS-->
+  <div class="row graph justify-content-center">
+    <canvas id="weatherChart" style="width:100%;max-width:1000px;margin:auto;" style="text-align: center;"></canvas>
+  </div>
 
-        //         const forecastData = data.forecast.forecastday; 
+  <div class="row mt-5">
+    <div class="col text-center">
+      <button type="button" class="btn text-center" onclick="toggle_attribute('Temperature (°F)')" style="background-color: orange; width:100%;">Toggle Temperature</button>
+    </div>
 
-        //         // Extract values from the forecastData
-        //         const forecastValues = forecastData.map(day => day.day.avgtemp_f); 
+    <div class="col text-center">
+      <button type="button" class="btn btn-primary text-center" onclick="toggle_attribute('Precipitation (in.)')" style="background-color: blue; width:100%;">Toggle Precipitation</button>
+    </div>
 
-        //         // Now you can use `first10Values` array for your needs
-        //         console.log(forecastValues)
+    <div class="col text-center">
+      <button type="button" class="btn text-center" onclick="toggle_attribute('Humidity (%)')" style="background-color: lightblue; width:100%;">Toggle Humidity</button>
+    </div>
 
-        //         const xValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-        //         const yValues = forecastValues
+    <div class="col text-center">
+      <button type="button" class="btn btn-primary text-center" onclick="toggle_attribute('Wind Speed (mph)')" style="background-color: green; width:100%;">Toggle Wind</button>
+    </div>
+  </div>
+  <h4 style="padding-top:60px; padding-bottom:20px;"><strong>Description of the Weather Chart</strong></h4>
+  <p>The weather chart shown is a color coded line graph that demonstrates the entered location's hourly temperature, precipitation, humidity, and windspeed in continental time relative to the time-zone of your entered location. Hovering over each point allows a precise number for that time of day along with the units of measurement and which line you are viewing.</p>
 
-                const temp = JSON.parse(document.getElementById('temp_forecast').textContent);
-                const precipitation = JSON.parse(document.getElementById('precipitation_forecast').textContent)
-                const humidity = JSON.parse(document.getElementById('humidity_forecast').textContent)
-                const wind = JSON.parse(document.getElementById('wind_forecast').textContent)
-                const days = JSON.parse(document.getElementById('day_forecast').textContent);
+  <script>
+    const temp = JSON.parse(document.getElementById('temp_forecast').textContent);
+    const precipitation = JSON.parse(document.getElementById('precipitation_forecast').textContent)
+    const humidity = JSON.parse(document.getElementById('humidity_forecast').textContent)
+    const wind = JSON.parse(document.getElementById('wind_forecast').textContent)
+    const days = JSON.parse(document.getElementById('day_forecast').textContent);
+  
+    // https://www.w3schools.com/js/js_graphics_chartjs.asp
+    const ctx = document.getElementById('weatherChart').getContext('2d');
+    this.chart = new Chart("weatherChart", {
+      type: "line",
+      data: {
+        labels: days,
+        datasets: [{
+          data: temp,
+          label: 'Temperature (°F)',
+          borderColor: "orange",
+          fill: false
+        },{
+          data: precipitation,
+          label: 'Precipitation (in.)',
+          borderColor: "blue",
+          fill: false
+        },{
+          data: humidity,
+          label: 'Humidity (%)',
+          borderColor: "lightblue",
+          fill: false
+        },{
+          data: wind,
+          label: 'Wind Speed (mph)',
+          borderColor: "green",
+          fill: false
+        }]
+      },
+      options: {
+        scales: {
+          xAxes: [{
+            scaleLabel:{
+              display: true,
+              labelString: 'Hours (MDT, Military)', //labels the x axis as hours
+              fontColor: 'black'
+            }
+          }]
+        }, //axes
+        legend: {
+          display: true,
+          labels: {
+            fontColor: 'black' //legend at the top of the graph font color
+          }
+        }
+      }
+    });
 
-                // https://www.w3schools.com/js/js_graphics_chartjs.asp
-                const ctx = document.getElementById('weatherChart').getContext('2d');
-                new Chart("weatherChart", {
-                  type: "line",
-                  data: {
-                    labels: days,
-                    datasets: [{
-                      data: temp,
-                      borderColor: "orange",
-                      fill: false
-                    },{
-                      data: precipitation,
-                      borderColor: "blue",
-                      fill: false
-                    },{
-                      data: humidity,
-                      borderColor: "lightblue",
-                      fill: false
-                    },{
-                      data: wind,
-                      borderColor: "green",
-                      fill: false
-                    }]
-                  },
-                  options: {
-                    legend: {display: false}
-                  }
-                });
-            // })
-            // .catch(error => console.error('Error fetching weather data:', error));
-    </script>
+    // Based on https://www.chartjs.org/docs/latest/developers/updates.html
+    function toggle_attribute(label) {
+      var dataset = this.chart.data.datasets.find(dataset => dataset.label == label);
+      dataset.hidden = !dataset.hidden;
+      this.chart.update();
+    } 
+  </script>
 
 
 {% endblock %}

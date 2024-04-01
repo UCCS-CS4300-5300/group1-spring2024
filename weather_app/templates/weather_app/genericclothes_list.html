@@ -3,6 +3,9 @@
 {% load static %}
 
 {% block content %}
+
+<!-- to let us use custom tag filters defined in templatetags/inventory_extras.py -->
+
 <!-- Styling for the tables so they look nice -->
 <style>
   td, th {
@@ -17,50 +20,103 @@
   
 </style>
 
+
 <h1 style="text-align:center;">Inventory list</h1>
 
 <!-- Table used to hold the buttons that will let you add and remove items -->
 <table align="center" style="margin: 0px auto;">
   <tr>
     <td>
-      <a class="btn btn-secondary" href="#" role="button">Add Item</a>
+      <a class="btn btn-secondary" href="{% url 'add_item' %}" role="button">Add Item</a>
     </td>
     <td>
-      <a class="btn btn-secondary" href="#" role="button">Remove Item</a>
+      <label for="cars">Filter Item:</label>
+
+      <select name="cars" id="filter-clothes-dropdown">
+        {% for cloth_field_name in generic_clothes_fields %}
+          {% if not forloop.first %} <!-- skips the "id" field we received from the model -->
+        <option value={{ cloth_field_name }}>{{ cloth_field_name}}</option>
+        {% endif %}
+        {% endfor %}
+      </select>
+    </td>
+    <td>
+      <input type="text" id="search-input" onkeyup="searchClothesChart()" placeholder="Search...">
     </td>
   </tr>
 </table>
 
 <!-- Table that will display the items on the database -->
-<table align="center" style="margin: 0px auto;">
+<table id="inv-table" align="center" class="clothes-list-table" style="margin: 0px auto;">
   <tr>
     <th>Clothes</th>
     <th>Type of Clothing</th>
-    <th>Comfort Level</th>
+    <th>Lowest Comfort Level</th>
+    <th>Highest Comfort Level</th>
     <th>Waterproof Rating</th>
-  </tr>
-  <tr>
-    <td>Red T-Shirt</td>
-    <td>Shirt</td>
-    <td>80</td>
-    <td>20</td>
-  </tr>
-  <tr>
-    <td>Blue Pants</td>
-    <td>Pants</td>
-    <td>60</td>
-    <td>60</td>
+    <th>Delete Item</th>
   </tr>
   <!-- For loop to autopopulate added items to display -->
-  {% for geenricclothes in genericclothes %}
+  {% for cloth in genericclothes %}
   <tr>
-    <td>{{ genericclothes.name }}</td>
-    <td>{{ genericclothes.clothing_type }}</td>
-    <td>{{ genericclothes.comfort_low }}</td>
-    <td>{{ genericclothes.waterproof_rating }}</td>
+    <td>{{ cloth.name }}</td>
+    <td>{{ cloth.clothing_type }}</td>
+    <td>{{ cloth.comfort_low }}</td>
+    <td>{{ cloth.comfort_high }}</td>
+    <td>{{ cloth.waterproof_rating }}</td>
+    <td><a class="btn btn-secondary" href="{% url 'delete_item' cloth.id %}" role="button">Delete</a></td>
   </tr>
   {% endfor %}
+  
 </table>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+  const selectDropdown = document.getElementById("filter-clothes-dropdown");
+  if (selectDropdown) {
+    selectDropdown.addEventListener('change', function (e) {
+    // query page for clothes with the specified filter
+    e.preventDefault()
+    selectedFilter = e.target.value
+    // NOTE : The html response returned from the fetch request is CORRECT
+    // However, the browser is not responding to this. Ie. it is not re-loading the page to show the new html
+    // Thus we have to set it directly since simply reloading will send another request and not fix the issue.
+    // idk if this is just my browser. also we could change the filter so it just filters
+    // the html table directly without making a request but stuff I found online also looked messy
+    // TODO : Add better filters (color wheel, different dropdown for clothing type, etc.)
+    fetch("/inventory?filterBy=" + selectedFilter).then(response => response.text()) // Extract the response body as text
+      .then(html => {
+        // This is works but looks weird and will probably cause bugs
+        document.open();
+        document.write(html);
+        document.close();
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      }); 
+      
+  });
+  }
+  })
+function searchClothesChart() {
+    var input, filter, table, tr, td, i, txtValue;
+    input = document.getElementById("search-input");
+    filter = input.value.toUpperCase();
+    table = document.getElementById("inv-table");
+    tr = table.getElementsByTagName("tr");
 
+    // Loop through all table rows, and hide those who don't match the search query
+    for (i = 0; i < tr.length; i++) {
+      td = tr[i].getElementsByTagName("td")[0];
+      if (td) {
+        txtValue = td.textContent || td.innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+          tr[i].style.display = "";
+        } else {
+          tr[i].style.display = "none";
+        }
+      }
+    }
+  }
+</script>
 {% endblock %}
 

@@ -9,10 +9,22 @@
   <!-- Caches form inputs, just put every field with oninput="cacheInput(this)" attributes -->
   <script>
       function cacheInput(e) {
-          localStorage.setItem(e.attributes["name"].value, e.value)
+          localStorage.setItem(e.attributes["name"].value, e.value);
       }
-  
-      window.onload = function () {
+
+      // function populate_color_table() {
+      //   let color_table = document.getElementById("color_table");
+      //   let colors = JSON.parse(document.getElementById('colors').textContent);
+      //   let row = color_table.insertRow(-1);
+        
+      //   for (let i = 0; i < colors.length; i++) {
+      //     let cell = row.insertCell(-1);
+      //     cell.innerHTML = colors[i];
+      //     cell.style.backgroundColor = colors[i];
+      //   }
+      // }
+
+      window.addEventListener('load', function() {
           let form = document.getElementById("recommendation");
           let inputs = form.getElementsByTagName('input');
   
@@ -21,13 +33,14 @@
               if (el.tagName.toLowerCase() != "input") {
                   continue
               }
-              let cachedVal = localStorage.getItem(el.attributes["name"].value)
+              let cachedVal = localStorage.getItem(el.attributes["name"].value);
               if (cachedVal != null) {
                   el.value = cachedVal;
               }
-              console.log(cachedVal)
+              console.log(cachedVal);
           }
-      }
+      });
+
   </script>
 
   <style>
@@ -41,7 +54,23 @@
     .clothe_placeholder:hover {
       background-color: rgba(210, 210, 210, 255);
     }
+
+    .color {
+      transition: all 0.5s ease;
+      color: rgba(0, 0, 0, 0) !important; 
+      text-align: center; 
+      font-weight: bold; 
+    }
+    
+    .color:hover {
+      background-color: white !important;
+      color: rgba(0, 0, 0, 255) !important;
+    }
+
+    
   </style>
+
+  {{ colors_current|json_script:"colors" }}
 
 {% endblock %}
 
@@ -52,133 +81,171 @@
       <div class="alert alert-danger">{{ error }}</div>
   {% endif %}
   
-  <div class="container p-5 mt-4" style="box-shadow: 2px 2px 4px black;">
-    <!-- <div class="row">
-      <h1 class="p-3" style="text-align: center;">Our Official Weather Recommendations</h1>
+  <div class="row" style="text-align: left;">
+    <hr>
+    <h2 style="text-align: center;">Outfit Recommendation</h2>
+    <hr>
+  </div>
+  <!-- <div class="row">
+    <h1 class="p-3" style="text-align: center;">Our Official Weather Recommendations</h1>
+  </div>
+  
+  <div class="row">
+    
+    <div class="col-4 offset-4 text-center">
+      <button class="btn clothe_placeholder mt-3">
+        Hats Placeholder
+      </button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-4 offset-4 text-center">
+      <button class="btn clothe_placeholder mt-3">
+        Shirts Placeholder
+      </button>
+    </div>
+    
+    <div class="col-4">
+      <button class="btn clothe_placeholder mt-3">
+        Offhand
+      </button>        
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-4 offset-4 text-center">
+      <button class="btn clothe_placeholder mt-3">
+        Pants Placeholder
+      </button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-4 offset-4 text-center">
+      <button class="btn clothe_placeholder mt-3">
+        Shoes Placeholder
+      </button>        
+    </div>
+  </div> -->
+
+  <div class="row">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Clothe Type</th>
+          <th scope="col">Currently</th>
+          <th scope="col">In Six Hours</th>
+          <th scope="col">In Twelve Hours</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Headwear</th>
+          <td>{{ outfit_current.0 }}</td>
+          <td>{{ outfit_six_hours.0 }}</td>
+          <td>{{ outfit_twelve_hours.0 }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Shirts</th>
+          <td>{{ outfit_current.1 }}</td>
+          <td>{{ outfit_six_hours.1 }}</td>
+          <td>{{ outfit_twelve_hours.1 }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Pants</th>
+          <td>{{ outfit_current.2 }}</td>
+          <td>{{ outfit_six_hours.2 }}</td>
+          <td>{{ outfit_twelve_hours.2 }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Shoes</th>
+          <td>{{ outfit_current.3 }}</td>
+          <td>{{ outfit_six_hours.3 }}</td>
+          <td>{{ outfit_twelve_hours.3 }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Adjusted Temperature (F°)</th>
+          <td>{{ comfort_current }}</td>
+          <td>{{ comfort_six_hours }}</td>
+          <td>{{ comfort_twelve_hours }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Outfit Waterproofness (%)</th>
+          <td>{{ waterproofing_current }}</td>
+          <td>{{ waterproofing_six_hours }}</td>
+          <td>{{ waterproofing_twelve_hours }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Waterproof Layers</th>
+          <td>{{ rain_outfit_current.0 }} - {{ rain_outfit_current.1 }}</td>
+          <td>{{ rain_outfit_six_hours.0 }} - {{ rain_outfit_six_hours.1 }}</td>
+          <td>{{ rain_outfit_twelve_hours.0 }} - {{ rain_outfit_twelve_hours.1 }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  {% if colors_current %}
+    <div class="row mt-5">
+      <hr>
+      <h2 style="text-align: center;">Recommended Color Palette</h2>
+      <hr>
     </div>
     
     <div class="row">
-      
-      <div class="col-4 offset-4 text-center">
-        <button class="btn clothe_placeholder mt-3">
-          Hats Placeholder
-        </button>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-4 offset-4 text-center">
-        <button class="btn clothe_placeholder mt-3">
-          Shirts Placeholder
-        </button>
-      </div>
-      
-      <div class="col-4">
-        <button class="btn clothe_placeholder mt-3">
-          Offhand
-        </button>        
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-4 offset-4 text-center">
-        <button class="btn clothe_placeholder mt-3">
-          Pants Placeholder
-        </button>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-4 offset-4 text-center">
-        <button class="btn clothe_placeholder mt-3">
-          Shoes Placeholder
-        </button>        
-      </div>
-    </div> -->
-
-    <div class="row">
       <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">Clothe Type</th>
-            <th scope="col">Currently</th>
-            <th scope="col">In Six Hours</th>
-            <th scope="col">In Twelve Hours</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th scope="row">Headwear</th>
-            <td>{{ outfit_current.0 }}</td>
-            <td>{{ outfit_six_hours.0 }}</td>
-            <td>{{ outfit_twelve_hours.0 }}</td>
-          </tr>
-          <tr>
-            <th scope="row">Shirts</th>
-            <td>{{ outfit_current.1 }}</td>
-            <td>{{ outfit_six_hours.1 }}</td>
-            <td>{{ outfit_twelve_hours.1 }}</td>
-          </tr>
-          <tr>
-            <th scope="row">Pants</th>
-            <td>{{ outfit_current.2 }}</td>
-            <td>{{ outfit_six_hours.2 }}</td>
-            <td>{{ outfit_twelve_hours.2 }}</td>
-          </tr>
-          <tr>
-            <th scope="row">Shoes</th>
-            <td>{{ outfit_current.3 }}</td>
-            <td>{{ outfit_six_hours.3 }}</td>
-            <td>{{ outfit_twelve_hours.3 }}</td>
-          </tr>
-          <tr>
-            <th scope="row">Adjusted Temperature (F°)</th>
-            <td>{{ comfort_current }}</td>
-            <td>{{ comfort_six_hours }}</td>
-            <td>{{ comfort_twelve_hours }}</td>
-          </tr>
+        <tbody id="color_table">
+          <!-- https://www.geeksforgeeks.org/for-loop-django-template-tags/ -->
+          {% for color in colors_current %}
+            <td class="color" style="background-color: {{ color }};">{{ color }}</td>
+          {% endfor %}
         </tbody>
       </table>
     </div>
-    
-    <form action="/recommendation" method="get" id="recommendation">
-      {% csrf_token %}
-        <div class="row mt-5">
-          <div class="col">
-            <label for="working_offset" class="form_label">Enter your Working Offset (F°): </label>
-            <input id="working_offset" type="number" name="working_offset" placeholder="0" value="{{ context.working_offset }}" class="form-control" oninput="cacheInput(this)" required>
-            <div class="invalid-feedback">
-              Please a valid offset, 0 if none.
-            </div>
+  {% endif %}
+  
+  <form action="/recommendation" method="get" id="recommendation">
+      <div class="row mt-5">
+        <div class="col">
+          <label for="working_offset" class="form_label">Enter your Working Offset (F°): </label>
+          <input id="working_offset" type="number" name="working_offset" placeholder="0" value="{{ context.working_offset }}" class="form-control" oninput="cacheInput(this)" required>
+          <div class="invalid-feedback">
+            Please a valid offset, 0 if none.
           </div>
-          <div class="col">
-            <label for="tolerance_offset" class="form_label">Enter your Tolerance Offset (F°): </label>
-            <input id="tolerance_offset" type="number" name="tolerance_offset" placeholder="0" value="{{ context.tolerance_offset }}" class="form-control" oninput="cacheInput(this)" required>
-            <div class="invalid-feedback">
-              Please a valid offset, 0 if none.
-            </div>
-          </div>
-          <input type="submit" value="OK" class="btn btn-primary mt-3">
         </div>
-      </form>
+        <div class="col">
+          <label for="tolerance_offset" class="form_label">Enter your Tolerance Offset (F°): </label>
+          <input id="tolerance_offset" type="number" name="tolerance_offset" placeholder="0" value="{{ context.tolerance_offset }}" class="form-control" oninput="cacheInput(this)" required>
+          <div class="invalid-feedback">
+            Please a valid offset, 0 if none.
+          </div>
+        </div>     
 
-      <div class="row mt-5" style="text-align: left;">
-        <hr>
-        <h2 style="text-align: center;">Definitions</h2>
-        <hr>
-        <!-- Code adapted from https://www.tutorialrepublic.com/twitter-bootstrap-tutorial/bootstrap-lists.php -->
-        <dl class="row">
-            <dt class="col-sm-3">Working Offset</dt>
-            <dd class="col-sm-9">How much hotter you believe you will be while working. For example, physical exercise may increase your temperature tolerance by 10 F°. Must be positive.</dd>
-          
-            <dt class="col-sm-3 text-truncate">Tolerance Offset</dt>
-            <dd class="col-sm-9">How sensitive you are to temperature fluctuations. For example, a temperature fluctuation of 10 F° makes you feel colder than you actually are, while a flucation of -10 F° makes you feel hotter than you actually are. Can be positive or negative.</dd>
-
-            <dt class="col-sm-3 text-truncate">Adjusted Temperature</dt>
-            <dd class="col-sm-9">The "feels" like temperature accounting for the heat index, windchill, working offset, and tolerance offset. This is the temperature you will actually be comfortable in.</dd>
-        </dl>
+        <div class="mt-3 btn-group" role="group" aria-label="Toggle color palette recommendation">
+          <input name="checkbox_colors" type="checkbox" class="btn-check" id="checkbox_colors" autocomplete="off" oninput="cacheInput(this)">
+          <label class="btn btn-outline-success" for="checkbox_colors">Color Palette Recommendations</label>
+        </div>
+        
+        <input type="submit" value="OK" class="btn btn-primary mt-3">
       </div>
-    
-  </div>
+    </form>
+
+    <div class="row mt-5" style="text-align: left;">
+      <hr>
+      <h2 style="text-align: center;">Definitions</h2>
+      <hr>
+      <!-- Code adapted from https://www.tutorialrepublic.com/twitter-bootstrap-tutorial/bootstrap-lists.php -->
+      <dl class="row">
+          <dt class="col-sm-3">Working Offset</dt>
+          <dd class="col-sm-9">How much hotter you believe you will be while working. For example, physical exercise may increase your temperature tolerance by 10 F°. Must be positive.</dd>
+        
+          <dt class="col-sm-3 text-truncate">Tolerance Offset</dt>
+          <dd class="col-sm-9">How sensitive you are to temperature fluctuations. For example, a temperature fluctuation of 10 F° makes you feel colder than you actually are, while a flucation of -10 F° makes you feel hotter than you actually are. Can be positive or negative.</dd>
+
+          <dt class="col-sm-3 text-truncate">Adjusted Temperature</dt>
+          <dd class="col-sm-9">The "feels" like temperature accounting for the heat index, windchill, working offset, and tolerance offset. This is the temperature you will actually be comfortable in.</dd>
+      </dl>
+    </div>
   
 {% endblock %}

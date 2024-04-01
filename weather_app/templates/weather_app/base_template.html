@@ -23,26 +23,52 @@
     <!-- https://www.jajaldoang.com/post/cache-form-inputs-with-localstorage-in-javascript -->
     <!-- Caches form inputs, just put every field with oninput="cacheInput(this)" attributes -->
     <script>
-        function cacheInput(e) {
-            localStorage.setItem(e.attributes["name"].value, e.value)
+      
+        function cacheInputBaseTemplate(e) {
+            sessionStorage.setItem(e.attributes["name"].value, e.value)
         }
+      
 
-        window.onload = function () {
-            let form = document.getElementById("location_form");
-            let inputs = form.getElementsByTagName('input');
+      // Event listener is used so that other pages can have their own forms cached without overwriting each other
 
-            for (let i = 0; i < inputs.length; i++) {
-                let el = inputs[i];
-                if (el.tagName.toLowerCase() != "input") {
-                    continue
-                }
-                let cachedVal = localStorage.getItem(el.attributes["name"].value)
-                if (cachedVal != null) {
-                    el.value = cachedVal;
-                }
-                console.log(cachedVal)
+        window.addEventListener('load', function() {
+          // Ensuring the user's location is cached across page changes
+
+          // https://www.geeksforgeeks.org/difference-between-local-storage-session-storage-and-cookies/
+          let locationVal = sessionStorage.getItem('location');  // sessionStorage is cleared when page ends
+          let paramLocation = new URLSearchParams(document.location.search).get("location");
+          
+          if (locationVal && paramLocation) {
+            if (locationVal != paramLocation) { // such as if the user directly inputted the location
+              sessionStorage.setItem('location', paramLocation);
             }
-        }
+          } else if (paramLocation) {
+            sessionStorage.setItem('location', paramLocation);
+          } else if (locationVal) {  // https://stackoverflow.com/questions/5997450/append-to-url-and-refresh-page
+            window.location.search += "&location=" + locationVal;
+          }
+          
+          // Caching the location_form
+          let form = document.getElementById("location_form");
+          let inputs = form.getElementsByTagName('input');
+
+          for (let i = 0; i < inputs.length; i++) {
+              let el = inputs[i];
+              if (el.tagName.toLowerCase() != "input") {
+                  continue
+              }
+              let cachedVal = sessionStorage.getItem(el.attributes["name"].value)
+              if (cachedVal != null) {
+                  el.value = cachedVal;
+              }
+              console.log(cachedVal)
+          }
+        });
+
+      function updateFormAction(form) {
+        var locationValue = form.location.value;
+        form.action = '/' + '?location=' + encodeURIComponent(locationValue);
+      }
     </script>
 
     
@@ -53,16 +79,7 @@
 
   </head>
   
-  
-  <body>
-    <script>
-      function updateFormAction(form) {
-        var locationValue = form.location.value;
-        form.action = '/' + '?location=' + encodeURIComponent(locationValue);
-      }
-    </script>
-
-    
+  <body>    
     <nav class="navbar navbar-expand-lg navbar-dark bg-orange lead;" style="background-color: black">
           <!-- Navbar -->
       <div class="container-fluid justify-content-center">
@@ -90,10 +107,10 @@
           {% endif %}
             
           <div class="row text-center">
-            <form onsubmit="updateFormAction(this);" id="location_form">
+            <form autocomplete="off" onsubmit="updateFormAction(this);" id="location_form">
               <p style="color: gray; font-size: 150%">Enter Location Here:</p>
-              <input id="location" class="form-control mx-auto" style="width: 75%;" type="text" name="location" placeholder="80918" oninput="cacheInput(this)" required>
-              <!--/?location=80918 -->
+              <input id="location" class="form-control mx-auto" style="width: 75%;" type="text" name="location" placeholder="80918" oninput="cacheInputBaseTemplate(this);" required>
+              <div id="result"></div>
               <button class="btn btn-primary mx-auto mt-3" style="width: 75%;" type="submit">Submit Location</a>
             </form>
           </div>
@@ -113,22 +130,25 @@
         <script>
         function openNav() {
           document.getElementById("mySidebar").style.width = "250px";
-          document.getElementById("main").style.marginLeft = "250px";
+          // document.getElementById("main").style.marginLeft = "250px"; - was throwing error
         }
 
         function closeNav() {
           document.getElementById("mySidebar").style.width = "0";
-          document.getElementById("main").style.marginLeft= "0";
+          // document.getElementById("main").style.marginLeft= "0"; - was throwing error
         }
+
         </script>
       </div>
     </nav>
     
     
     <!-- add block content from html template -->
-    {% block content %}
-    
-    {% endblock %}
+    <div class="container p-5 mt-4 mb-5" style="box-shadow: 2px 2px 4px black;">
+      {% block content %}
+      
+      {% endblock %}
+    </div>
     </div>
   </body>
 </html>

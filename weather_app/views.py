@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from django.http import JsonResponse
+from django.shortcuts import redirect, render
+from django.http import JsonResponse, HttpResponse
 from django.views import View, generic
 from django.contrib import messages
 from .models import Weather, GenericClothes
@@ -12,8 +12,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib import messages
-from .forms import CreateUserForm
+from .forms import *
 from typing import Any
+
+import logging
+logger = logging.getLogger("test_logger")
 
 class TemperatureView(View):
   """
@@ -27,7 +30,8 @@ class TemperatureView(View):
 
     tolerance_offset = request.GET.get('tolerance_offset')
     working_offset = request.GET.get('working_offset')
-    location = request.GET.get('location') # included in the sidebar?
+    location = request.GET.get('location') # included in the sidebar
+    color_selected = request.GET.get('checkbox_colors')
 
     context = {}
     
@@ -38,7 +42,6 @@ class TemperatureView(View):
         tolerance_offset = int(tolerance_offset)
         working_offset = int(working_offset)
         
-        # TODO - Change this out to get the cached current weather data for the user's location
         weather_data = Weather.get_weather_forecast(location)
 
         # All of this is formatting the weather data to be calculated in the comfort, which then gets the outfits, which then is rendered.
@@ -56,47 +59,74 @@ class TemperatureView(View):
           int(weather_data[x][12]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
         ]
 
-        # asterisk unpacks the array
-        comfort_current = GenericClothes.calculate_comfort(*current_weather_data[:3], tolerance_offset, working_offset)
-        comfort_six_hours = GenericClothes.calculate_comfort(*six_hours_weather_data[:3], tolerance_offset, working_offset)
-        comfort_twelve_hours = GenericClothes.calculate_comfort(*twelve_hours_weather_data[:3], tolerance_offset, working_offset)
-        
-        outfit_current = GenericClothes.get_clothes_in_range(comfort_current)
-        outfit_six_hours = GenericClothes.get_clothes_in_range(comfort_six_hours)
-        outfit_twelve_hours = GenericClothes.get_clothes_in_range(comfort_twelve_hours)
-        
-        outfit_current = [clothe.name for clothe in outfit_current]
-        outfit_six_hours = [clothe.name for clothe in outfit_six_hours]
-        outfit_twelve_hours = [clothe.name for clothe in outfit_twelve_hours]
+        current = GenericClothes.get_outfit_recommendation(*current_weather_data, tolerance_offset, working_offset)
+        six_hours = GenericClothes.get_outfit_recommendation(*six_hours_weather_data, tolerance_offset, working_offset)
+        twelve_hours = GenericClothes.get_outfit_recommendation(*twelve_hours_weather_data, tolerance_offset, working_offset)
 
-        context["outfit_current"] = outfit_current
-        context["outfit_six_hours"] = outfit_six_hours
-        context["outfit_twelve_hours"] = outfit_twelve_hours
+        context["waterproofing_current"] = current['waterproofness']
+        context["waterproofing_six_hours"] = six_hours['waterproofness']
+        context["waterproofing_twelve_hours"] = twelve_hours['waterproofness']
 
-        context["comfort_current"] = round(comfort_current, 2)
-        context["comfort_six_hours"] = round(comfort_six_hours, 2)
-        context["comfort_twelve_hours"] = round(comfort_twelve_hours)
+        context["rain_outfit_current"] = current['precipitation_outfit']
+        context["rain_outfit_six_hours"] = six_hours['precipitation_outfit']
+        context["rain_outfit_twelve_hours"] = twelve_hours['precipitation_outfit']
+
+        context["comfort_current"] = round(current['comfort'], 2)
+        context["comfort_six_hours"] = round(six_hours['comfort'], 2)
+        context["comfort_twelve_hours"] = round(twelve_hours['comfort'], 2)
+
+        context["outfit_current"] = current['outfit']
+        context["outfit_six_hours"] = six_hours['outfit']
+        context["outfit_twelve_hours"] = twelve_hours['outfit']
+
+        if color_selected:
+          context["colors_current"] = current['colors']
               
       except Exception as e:
         context["error"] = f"Error, please try again. Error message: {e}"
     
     return render(request, 'weather_app/recommendation.html', context)
   
-class GenericClothesListView(generic.ListView):
-  model = GenericClothes
-      
-class GenericClothesDetailView(generic.DetailView):
+class GenericClothesListView(View):
   model = GenericClothes
 
-  def get_context_data(self, **kwargs):
-    context = super(GenericClothesDetailView, self).get_context_data(**kwargs)
-    context['genericclothes'] = GenericClothes.objects.filter(genericclothes=context['genericclothes'])
-    return context 
+  def transform_field_name(self, field_name):
+    return field_name.capitalize().replace("_", " ")
+  
+  def get(self, request, *args, **kwargs):
+    #DATA FOR TESTING
+    # test_cloth = self.model(name="nade", clothing_type="SHO", comfort_low=10, comfort_high=20, waterproof_rating=400)
+    # test_cloth.save()
+    
+    # Get field model names for the context so frontend knows what options we can query clothing by
+    context = {}
+    field_name = request.GET.get('filterBy')
+    if(field_name == None):
+      field_name = "name" # If no filter is provided sort by name by default
+    logger.debug(field_name)
+    fields = self.model._meta.get_fields()
+    
+    context["generic_clothes_fields"] = [field.name for field in fields] # Only send field names to make filtering easier on frontend
+    context['genericclothes'] = self.model.objects.all().order_by(field_name)
+    return render(request, 'weather_app/genericclothes_list.html', context)
+      
+# class GenericClothesDetailView(generic.DetailView):
+#   model = GenericClothes
+#   template = "/weather_app/generic_clothes_detail.html"
+#   context_object_name = "objects"
+
+#   def get_queryset(self):
+#     filter_param = request.GET.get('filterBy')
+#     queryset = super().get_queryset()
+#     if filter_param:
+#       queryset = queryset.filter(your_field=filter_param)
+#     return queryset
 
 # index home page
 class WeatherView(View):
 
   def get(self, request):
+    
     # get location from request, e.g. /?location=80918
     location = request.GET.get('location')
 
@@ -111,12 +141,12 @@ class WeatherView(View):
           'humidity_forecast': weather_data['humidity'],
           'wind_forecast': weather_data['wind'],
           'day_forecast': weather_data['hours'][:24],
-          'location' : weather_data['location']
+          'location' : weather_data['location'],
       }
   
       return render(request, 'weather_app/index.html', context)
     else:
-      return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/index.html', context={'error_message': 'Please enter a valid zip code'})
+      return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/index.html', context={'error_message': 'Please enter a valid location'})
 
 #register for an account
 class RegisterUser(View):
@@ -136,7 +166,7 @@ class RegisterUser(View):
         user = form.save()
         username = form.cleaned_data.get('username')
         #create a new group for the user so that things can be admin access only
-        group = Group.objects.get(name='user__role')
+        group = Group.objects.get_or_create(name='user__role')[0]
         user.groups.add(group) 
 
         messages.success(request, 'Account was created for ' + username)
@@ -144,7 +174,36 @@ class RegisterUser(View):
     context = {'form': form}
     return render(request, 'registration/register.html', context) 
 
-    # # I COMMENTED THIS OUT FOR THE TIME BEING, CHANGE IT BACK WHEN YOU WORK ON IT
+#adds items to inventory
+def addItem(request):
+    form = AddForm()
+
+    if request.method == 'POST':
+
+      form = AddForm(request.POST)
+
+      if form.is_valid():
+        post = form.save(commit=False)
+        post.save()
+
+        return redirect('inventory')
+
+    context = {'form': form}
+    return render(request, 'weather_app/add_item.html', context)
+
+#deletes an item from the inventory
+def deleteItem(request, id):
+  post = GenericClothes.objects.get(id = id)
+
+  if request.method == 'POST':
+    post.delete()
+    return redirect('inventory')
+  
+  context = {'item': post}
+  return render(request, 'weather_app/delete_item.html', context)
+
+
+# # I COMMENTED THIS OUT FOR THE TIME BEING, CHANGE IT BACK WHEN YOU WORK ON IT
 
   # # I DO NOT THINK THIS FUNCTIONALITY IS NEEDED FOR SPRINT0-3, BUT MAY BE INTERESTING FOR ITERATION 1 :)!
   # def get(self, request):
