@@ -31,5 +31,5 @@ urlpatterns = [
 
     #user auth paths
     path('accounts/', include('django.contrib.auth.urls')),
-    path('accounts/register/', RegisterUser.as_view(), name = 'register'),
+    path('accounts/register/', views.registerUser, name = 'register'),
 ]

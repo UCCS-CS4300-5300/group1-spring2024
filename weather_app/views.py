@@ -149,16 +149,7 @@ class WeatherView(View):
       return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/index.html', context={'error_message': 'Please enter a valid location'})
 
 #register for an account
-class RegisterUser(View):
-  #handle get request
-  def get(self, request):
-    #create a form instance and populate it with data from the request
-    form = CreateUserForm()
-    context = {'form': form} #context is used to pass data to the template
-    return render(request, 'registration/register.html', context) #render request for html
-
-  #handle post request
-  def post(self, request):
+def registerUser(request):
     form = CreateUserForm()
     if request.method == 'POST':
       form = CreateUserForm(request.POST)
@@ -166,8 +157,8 @@ class RegisterUser(View):
         user = form.save()
         username = form.cleaned_data.get('username')
         #create a new group for the user so that things can be admin access only
-        group = Group.objects.get_or_create(name='user__role')[0]
-        user.groups.add(group) 
+        #group = Group.objects.get_or_create(name='user__role')[0]
+        #user.groups.add(group) 
 
         messages.success(request, 'Account was created for ' + username)
         return redirect('login') #after successful registration, redirect to login page

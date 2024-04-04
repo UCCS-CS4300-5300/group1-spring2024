@@ -101,9 +101,17 @@
         <div id="mySidebar" class="sidebar">
           <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
           {% if user.is_authenticated %}
-            <a href="{% url 'logout' %}?next={{request.path}}">Logout</a>
+            <form action="{% url 'logout' %}" method="post">
+              {% csrf_token %}
+              {{form.as_p}}
+              <button style="color:gray; border-radius:8px; font-size:20px; box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);"type="submit">Logout {{user}}</button>
+            </form>
           {% else %}
-            <a href="{% url 'login' %}?next={{request.path}}">Login</a>
+          <form action="{% url 'login' %}" method="post">
+            {% csrf_token %}
+            {{form.as_p}}
+            <button style="color:gray; border-radius:8px; font-size:20px; box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);" type="submit">Login</button>
+          </form>
           {% endif %}
             
           <div class="row text-center">
