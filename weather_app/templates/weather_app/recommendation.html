@@ -8,53 +8,80 @@
   <!-- https://www.jajaldoang.com/post/cache-form-inputs-with-localstorage-in-javascript -->
   <!-- Caches form inputs, just put every field with oninput="cacheInput(this)" attributes -->
   <script>
-      function cacheInput(e) {
-          localStorage.setItem(e.attributes["name"].value, e.value);
+    function cacheInput(e) {
+        localStorage.setItem(e.attributes["name"].value, e.value);
+    }
+
+    window.addEventListener('load', function() {
+        let form = document.getElementById("recommendation");
+        let inputs = form.getElementsByTagName('input');
+
+        for (let i = 0; i < inputs.length; i++) {
+            let el = inputs[i];
+            if (el.tagName.toLowerCase() != "input") {
+                continue
+            }
+            let cachedVal = localStorage.getItem(el.attributes["name"].value);
+            if (cachedVal != null) {
+                el.value = cachedVal;
+            }
+            console.log(cachedVal);
+        }
+    });
+
+    // https://www.w3schools.com/w3css/w3css_tabulators.asp
+    function openOutfit(outfit) {
+      var i;
+      var x = document.getElementsByClassName("outfits");
+      for (i = 0; i < x.length; i++) {
+        x[i].style.display = "none";
       }
-
-      // function populate_color_table() {
-      //   let color_table = document.getElementById("color_table");
-      //   let colors = JSON.parse(document.getElementById('colors').textContent);
-      //   let row = color_table.insertRow(-1);
-        
-      //   for (let i = 0; i < colors.length; i++) {
-      //     let cell = row.insertCell(-1);
-      //     cell.innerHTML = colors[i];
-      //     cell.style.backgroundColor = colors[i];
-      //   }
-      // }
-
-      window.addEventListener('load', function() {
-          let form = document.getElementById("recommendation");
-          let inputs = form.getElementsByTagName('input');
-  
-          for (let i = 0; i < inputs.length; i++) {
-              let el = inputs[i];
-              if (el.tagName.toLowerCase() != "input") {
-                  continue
-              }
-              let cachedVal = localStorage.getItem(el.attributes["name"].value);
-              if (cachedVal != null) {
-                  el.value = cachedVal;
-              }
-              console.log(cachedVal);
-          }
-      });
-
+      document.getElementById(outfit).style.display = "block";
+    }
   </script>
 
   <style>
-    .clothe_placeholder {
+    .tile_clothe_placeholder {
+      position: relative;
       width: 250px;
       height: 250px;
-      background-color: rgba(191, 191, 191, 255);
+      background-color: rgba(222, 222, 222, 255);
       color: rgba(0, 0, 0, 255);
+      font-size: 24px;
     }
 
-    .clothe_placeholder:hover {
+    .tile_clothe_placeholder:hover {
       background-color: rgba(210, 210, 210, 255);
     }
 
+    .tile_clothe_placeholder:hover .tile_image {
+      transform: translateX(-100%);
+      opacity: 0%;
+    }
+
+    .tile_image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      object-fit: fill;
+      transition: all 0.5s ease;
+      width: 100%; 
+      height: 100%;
+      transform: translateX(0);
+    }
+
+    .tile_header {
+      width: 250px;
+      height: 250px;
+      background-color: rgba(255, 255, 255, 0);
+      color: rgba(0, 0, 0, 255);
+      font-size: 36px;
+      font-weight: bold;
+      border-style: dot-dot-dash;
+      border-width: 1px;
+      border-color: black;
+    }
+    
     .color {
       transition: all 0.5s ease;
       color: rgba(0, 0, 0, 0) !important; 
@@ -81,89 +108,70 @@
       <div class="alert alert-danger">{{ error }}</div>
   {% endif %}
   
-  <div class="row" style="text-align: left;">
-    <hr>
-    <h2 style="text-align: center;">Outfit Recommendation</h2>
-    <hr>
-  </div>
-  <!-- <div class="row">
+  <div class="row">
     <h1 class="p-3" style="text-align: center;">Our Official Weather Recommendations</h1>
   </div>
-  
+
+  <hr>
+
   <div class="row">
+    <div class="col">
+      <button class="btn btn-dark p-2" onclick="openOutfit('temperature')" style="width: 100%; border-radius: 0px;">Open Temperature Outfit Recommendation</button>
+    </div>
+    <div class="col">
+      <button class="btn btn-dark p-2" onclick="openOutfit('rain')" style="width: 100%; border-radius: 0px;">Open Rain Outfit Recommendation</button>
+    </div>
+  </div>
+
+  <div id="rain" class="outfits" style="display: none;">
+    {% for type in rain_outfit %}
+      <div class="row">
+        {% for article in type %}
+        <div class="col-3 text-center">
+          <button class="btn tile_clothe_placeholder mt-3">
+            {{ article.name }}
+            <img src="{{ article.image }}" alt="{{ article.name }}" class="tile_image">
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+      <hr>
+    {% endfor %}
+  </div>
+
+  <div id="temperature" class="outfits">
+    {% for type in outfit %}
+      <div class="row">
+        <div class="col-3 text-center">
+          <button class="btn tile_header mt-3">
+            {% cycle 'Hats' 'Shirts' 'Pants' 'Shoes' %}
+          </button>      
+        </div>
+        
+        {% for article in type %}
+        <div class="col-3 text-center">
+          <button class="btn tile_clothe_placeholder mt-3">
+            {{ article.name }}
+            <img src="{{ article.image }}" alt="{{ article.name }}" class="tile_image">
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+      <hr>
+    {% endfor %}
+  </div>
     
-    <div class="col-4 offset-4 text-center">
-      <button class="btn clothe_placeholder mt-3">
-        Hats Placeholder
-      </button>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-4 offset-4 text-center">
-      <button class="btn clothe_placeholder mt-3">
-        Shirts Placeholder
-      </button>
-    </div>
-    
-    <div class="col-4">
-      <button class="btn clothe_placeholder mt-3">
-        Offhand
-      </button>        
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-4 offset-4 text-center">
-      <button class="btn clothe_placeholder mt-3">
-        Pants Placeholder
-      </button>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-4 offset-4 text-center">
-      <button class="btn clothe_placeholder mt-3">
-        Shoes Placeholder
-      </button>        
-    </div>
-  </div> -->
-
   <div class="row">
     <table class="table">
       <thead>
         <tr>
           <th scope="col">Clothe Type</th>
           <th scope="col">Currently</th>
-          <th scope="col">In Six Hours</th>
-          <th scope="col">In Twelve Hours</th>
+          <th scope="col">Tomorrow</th>
+          <th scope="col">In Two Days</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <th scope="row">Headwear</th>
-          <td>{{ outfit_current.0 }}</td>
-          <td>{{ outfit_six_hours.0 }}</td>
-          <td>{{ outfit_twelve_hours.0 }}</td>
-        </tr>
-        <tr>
-          <th scope="row">Shirts</th>
-          <td>{{ outfit_current.1 }}</td>
-          <td>{{ outfit_six_hours.1 }}</td>
-          <td>{{ outfit_twelve_hours.1 }}</td>
-        </tr>
-        <tr>
-          <th scope="row">Pants</th>
-          <td>{{ outfit_current.2 }}</td>
-          <td>{{ outfit_six_hours.2 }}</td>
-          <td>{{ outfit_twelve_hours.2 }}</td>
-        </tr>
-        <tr>
-          <th scope="row">Shoes</th>
-          <td>{{ outfit_current.3 }}</td>
-          <td>{{ outfit_six_hours.3 }}</td>
-          <td>{{ outfit_twelve_hours.3 }}</td>
-        </tr>
         <tr>
           <th scope="row">Adjusted Temperature (F°)</th>
           <td>{{ comfort_current }}</td>
@@ -175,12 +183,6 @@
           <td>{{ waterproofing_current }}</td>
           <td>{{ waterproofing_six_hours }}</td>
           <td>{{ waterproofing_twelve_hours }}</td>
-        </tr>
-        <tr>
-          <th scope="row">Waterproof Layers</th>
-          <td>{{ rain_outfit_current.0 }} - {{ rain_outfit_current.1 }}</td>
-          <td>{{ rain_outfit_six_hours.0 }} - {{ rain_outfit_six_hours.1 }}</td>
-          <td>{{ rain_outfit_twelve_hours.0 }} - {{ rain_outfit_twelve_hours.1 }}</td>
         </tr>
       </tbody>
     </table>
@@ -224,10 +226,10 @@
 
         <div class="mt-3 btn-group" role="group" aria-label="Toggle color palette recommendation">
           <input name="checkbox_colors" type="checkbox" class="btn-check" id="checkbox_colors" autocomplete="off" oninput="cacheInput(this)">
-          <label class="btn btn-outline-success" for="checkbox_colors">Color Palette Recommendations</label>
+          <label class="btn btn-outline-success" for="checkbox_colors">Toggle Color Palette Recommendations</label>
         </div>
         
-        <input type="submit" value="OK" class="btn btn-primary mt-3">
+        <input type="submit" value="Submit" class="btn btn-primary mt-3">
       </div>
     </form>
 

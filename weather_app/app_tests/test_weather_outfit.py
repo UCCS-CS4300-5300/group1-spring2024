@@ -537,6 +537,22 @@ class TestGenericClothesModelUnit(TestCase):
   """
 
   fixtures = ['fixture_generic_clothes.json']
+
+  # --------------------------- save ---------------------------
+
+  def test_save(self):
+    """
+    Tests that the save method properly assigns a default image.
+    """
+
+    # Arrange
+    new_clothes = GenericClothes(name="Logan's Shirt", clothing_type="SHR", comfort_low=60, comfort_high=100, waterproof_rating=60)
+
+    # Act
+    new_clothes.save()
+
+    # Assert
+    self.assertEqual(new_clothes.image, 'generic_clothes/default-shirt.png')
   
   # --------------------------- get_outfit_recommendation ---------------------------
   

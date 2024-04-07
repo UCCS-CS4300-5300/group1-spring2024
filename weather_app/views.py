@@ -15,6 +15,8 @@ from django.contrib import messages
 from .forms import *
 from typing import Any
 
+from itertools import zip_longest
+
 import logging
 logger = logging.getLogger("test_logger")
 
@@ -51,34 +53,30 @@ class TemperatureView(View):
           int(weather_data[x][0]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
         ]
 
-        six_hours_weather_data = [
-          int(weather_data[x][6]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
+        next_weather_data = [
+          int(weather_data[x][24]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
         ]
 
-        twelve_hours_weather_data = [
-          int(weather_data[x][12]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
+        final_hours_weather_data = [
+          int(weather_data[x][48]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
         ]
 
         current = GenericClothes.get_outfit_recommendation(*current_weather_data, tolerance_offset, working_offset)
-        six_hours = GenericClothes.get_outfit_recommendation(*six_hours_weather_data, tolerance_offset, working_offset)
-        twelve_hours = GenericClothes.get_outfit_recommendation(*twelve_hours_weather_data, tolerance_offset, working_offset)
+        next = GenericClothes.get_outfit_recommendation(*next_weather_data, tolerance_offset, working_offset)
+        final = GenericClothes.get_outfit_recommendation(*final_hours_weather_data, tolerance_offset, working_offset)
 
         context["waterproofing_current"] = current['waterproofness']
-        context["waterproofing_six_hours"] = six_hours['waterproofness']
-        context["waterproofing_twelve_hours"] = twelve_hours['waterproofness']
-
-        context["rain_outfit_current"] = current['precipitation_outfit']
-        context["rain_outfit_six_hours"] = six_hours['precipitation_outfit']
-        context["rain_outfit_twelve_hours"] = twelve_hours['precipitation_outfit']
+        context["waterproofing_six_hours"] = next['waterproofness']
+        context["waterproofing_twelve_hours"] = final['waterproofness']
 
         context["comfort_current"] = round(current['comfort'], 2)
-        context["comfort_six_hours"] = round(six_hours['comfort'], 2)
-        context["comfort_twelve_hours"] = round(twelve_hours['comfort'], 2)
+        context["comfort_six_hours"] = round(next['comfort'], 2)
+        context["comfort_twelve_hours"] = round(final['comfort'], 2)
 
-        context["outfit_current"] = current['outfit']
-        context["outfit_six_hours"] = six_hours['outfit']
-        context["outfit_twelve_hours"] = twelve_hours['outfit']
+        context["outfit"] = [(c0a, c6a, c12a) for c0a, c6a, c12a in zip(current['outfit'], next['outfit'], final['outfit'])]
 
+        context["rain_outfit"] = [(c0a, c6a, c12a) for c0a, c6a, c12a in zip_longest(current['precipitation_outfit'], next['precipitation_outfit'], final['precipitation_outfit'], fillvalue="Missing...")]
+        
         if color_selected:
           context["colors_current"] = current['colors']
               

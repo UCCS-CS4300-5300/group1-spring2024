@@ -34,7 +34,7 @@ class TestColorGenerationUnit(TestCase):
         return mock_datetime
     
     expected_color = ["yellow", "aqua", "skyblue", "coral", "limegreen"]
-
+    
     # https://stackoverflow.com/questions/16134281/python-mocking-a-function-from-an-imported-module
     # https://docs.python.org/3/library/unittest.mock.html#patch-object
     # https://stackoverflow.com/questions/4481954/trying-to-mock-datetime-date-today-but-not-working/25652721#25652721
