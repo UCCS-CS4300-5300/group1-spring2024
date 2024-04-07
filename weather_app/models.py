@@ -419,7 +419,8 @@ class Weather(models.Model):
     app = Nominatim(user_agent="Weather App")
 
     location_input = "80918" if not location else location  # 80918 is UCCS main campus
-
+    result = None
+    
     # Get location raw data from the user
     location = app.geocode(location_input)
     if location:
@@ -429,10 +430,18 @@ class Weather(models.Model):
       if weather_data:
         result = Weather._format_response(weather_data, location)
         return result
-      else:
-        return None
-    return None
 
+    # failed to get location, e.g. user inputted "Canada"
+    if result == None:
+      location = app.geocode("80918")
+      latitude = location.latitude
+      longitude = location.longitude
+      weather_data = Weather._get_weather(latitude, longitude)
+      if weather_data:
+        result = Weather._format_response(weather_data, location)
+        return result
+
+    return None
 
 """ def get_location():
   app = Nominatim(user_agent="Weather App")
