@@ -126,30 +126,34 @@
   <hr>
 
   <div id="rain" class="outfits" style="display: none;">
-    <div class="row mt-3">
-      <div class="col-4 text-center">
-        <h5>Today's Outfit</h5>
-      </div>
-      <div class="col-4 text-center">
-        <h5>Tomorrow's Outfit</h5>
-      </div>
-      <div class="col-4 text-center">
-        <h5>Two Day's Outfit</h5>
-      </div>
-    </div>
-    {% for type in rain_outfit %}
-      <div class="row">
-        {% for article in type %}
+    {% if rain_outfit %}
+      <div class="row mt-3">
         <div class="col-4 text-center">
-          <button class="btn tile_clothe_placeholder mt-3">
-            {{ article.name }}
-            <img src="{{ article.image }}" onerror="this.style.display='none'" alt="{{ article.name }}" class="tile_image">
-          </button>
+          <h5>Today's Outfit</h5>
         </div>
-        {% endfor %}
+        <div class="col-4 text-center">
+          <h5>Tomorrow's Outfit</h5>
+        </div>
+        <div class="col-4 text-center">
+          <h5>Two Day's Outfit</h5>
+        </div>
       </div>
-      <hr>
-    {% endfor %}
+      {% for type in rain_outfit %}
+        <div class="row">
+          {% for article in type %}
+          <div class="col-4 text-center">
+            <button class="btn tile_clothe_placeholder mt-3">
+              {{ article.name }}
+              <img src="{{ article.image }}" onerror="this.style.display='none'" alt="{{ article.name }}" class="tile_image">
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+        <hr>
+      {% endfor %}
+    {% else %}
+      <h5 class="m-2" style="text-align: center;">No layers recommended for rain as you are plenty waterproof already!</h5>
+    {% endif %}
   </div>
 
   <div id="temperature" class="outfits">
