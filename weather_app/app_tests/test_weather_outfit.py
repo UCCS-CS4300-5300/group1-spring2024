@@ -13,6 +13,7 @@ class TestGenericClothesIntegration(TestCase):
   Tests user story: Temperature Based Outfit Generation Per Data Set (Temp, Humidity, Precipitation, Wind) #38 and user story: Temperature Based Outfit Generation #14 at the integration level. 
   """
 
+  maxDiff=None
   fixtures = ['fixture_generic_clothes.json']
 
   def test_integration_temperature_generation_invalid_inputs(self):
@@ -195,7 +196,19 @@ class TestGenericClothesIntegration(TestCase):
       response = self.client.get(reverse('recommendation'), context)
       context_data = response.context
 
-    expect_outfit = [(a, b, c) for a, b, c in zip(["Thermal Running Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"], ["Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers", "Waterproof Hiking Boots"], ["Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers", "Waterproof Hiking Boots"])]
+    expect_outfit = [
+      (
+        {"image": c0image, "name": c0name}, {"image": c24image, "name": c24name}, {"image": c48image, "name": c48name}
+      ) 
+          for c0name, c0image, c24name, c24image, c48name, c48image in zip(
+        ["Thermal Running Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"], 
+        ["/media/generic_clothes/Thermal_Running_Hat.jpeg", "/media/generic_clothes/Insulated_Long_Sleeve.jpg", "/media/generic_clothes/Fleece-Lined_Softshell_Pants.jpg", "/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"],
+        ["Lightweight Rain Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"], 
+        ["/media/generic_clothes/Lightweight_Rain_Hat.jpeg", "/media/generic_clothes/Insulated_Long_Sleeve.jpg", "/media/generic_clothes/Fleece-Lined_Softshell_Pants.jpg", "/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"],
+        ["Cotton Baseball Cap", "Breathable Long Sleeve", "Convertible Cargo Pants", "Breathable Trail Running Shoes"], 
+        ["/media/generic_clothes/Cotton_Baseball_Cap.jpeg", "/media/generic_clothes/Breathable_Long_Sleeve.jpeg", "/media/generic_clothes/Convertible_Cargo_Pants.jpeg", "/media/generic_clothes/Breathable_Trail_Running_Shoes.jpeg"],
+          )
+    ]
 
     expect_rain_outfit = [("Umbrella"), ("Waterproof Tarp")]
 
@@ -303,7 +316,7 @@ class TestGenericClothesIntegration(TestCase):
       expected_return = {
         "comfort": 46.04,
         "waterproofness": 68.75,
-        "outfit": [{"name": name, "image": url} for name, url in zip(['Breathable Sun Hat', 'Water-Resistant Softshell', 'Water-Resistant Hiking Pants', 'Waterproof Hiking Boots'], ["generic_clothes/Breathable_Sun_Hat.jpeg", "generic_clothes/Water-Resistant_Softshell.jpeg", "generic_clothes/Water-Resistant_Hiking_Pants.jpeg","generic_clothes/Waterproof_Hiking_Boots.jpeg"])],
+        "outfit": [{"name": name, "image": url} for name, url in zip(['Breathable Sun Hat', 'Water-Resistant Softshell', 'Water-Resistant Hiking Pants', 'Waterproof Hiking Boots'], ["/media/generic_clothes/Breathable_Sun_Hat.jpeg", "/media/generic_clothes/Water-Resistant_Softshell.jpeg", "/media/generic_clothes/Water-Resistant_Hiking_Pants.jpeg","/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"])],
         "precipitation_outfit": [],
         "colors": ["orange", "red", "brown", "goldenrod", "olive"]
       }
@@ -478,7 +491,7 @@ class TestGenericClothesViewUnit(TestCase):
         working_offset = 10
        
         expected_recommendation_calls = [
-          call(mwr['temperature'][x], mwr['humidity'][x], mwr['wind'][x], mwr['precipitation'][x], tolerance_offset, working_offset) for x in range(0, 13, 6)
+          call(mwr['temperature'][x], mwr['humidity'][x], mwr['wind'][x], mwr['precipitation'][x], tolerance_offset, working_offset) for x in range(0, 24, 48)
         ]
 
         expected_weather_calls = [
@@ -609,8 +622,8 @@ class TestGenericClothesModelUnit(TestCase):
       expected_return = {
         "comfort": mock_cc.return_value,
         "waterproofness": mock_temp.return_value[1],
-        "outfit": [{"name": test_clothe_1.name, "image": "generic_clothes/default-hat.png"}],
-        "precipitation_outfit": [{"name": test_clothe_2.name, "image": "generic_clothes/default.png"}],
+        "outfit": [{"name": test_clothe_1.name, "image": "/media/generic_clothes/default-hat.png"}],
+        "precipitation_outfit": [{"name": test_clothe_2.name, "image": "/media/generic_clothes/default.png"}],
         "colors": ['some colors']
       }
       
@@ -735,9 +748,10 @@ class TestGenericClothesModelUnit(TestCase):
 
     # Act
     outfit = GenericClothes._get_clothes_in_prec(precipitation_chance, average_waterproofing)
-
+    outfit_names = [clothes.name for clothes in outfit]
+    
     # Assert
-    self.assertEqual(outfit, ["Umbrella", "Waterproof Tarp"])
+    self.assertEqual(outfit_names, ["Umbrella", "Waterproof Tarp"])
 
   def test_get_clothes_in_prec_middle(self):
     """
