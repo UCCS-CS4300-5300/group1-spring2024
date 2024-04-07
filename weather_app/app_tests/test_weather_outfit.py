@@ -195,19 +195,13 @@ class TestGenericClothesIntegration(TestCase):
       response = self.client.get(reverse('recommendation'), context)
       context_data = response.context
 
+    expect_outfit = [(a, b, c) for a, b, c in zip(["Thermal Running Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"], ["Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers", "Waterproof Hiking Boots"], ["Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers", "Waterproof Hiking Boots"])]
+
+    expect_rain_outfit = [("Umbrella"), ("Waterproof Tarp")]
+
     # assert
     self.assertEqual(response.status_code, 200)
-    self.assertEqual(context_data['outfit_current'], 
-                     ["Thermal Running Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"])
-    self.assertEqual(context_data['rain_outfit_current'], ["Umbrella", "Waterproof Tarp"])
-
-    self.assertEqual(context_data['outfit_six_hours'], 
-                     ["Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers", "Waterproof Hiking Boots"])
-    self.assertEqual(context_data['rain_outfit_six_hours'], [])
-
-    self.assertEqual(context_data['outfit_twelve_hours'], 
-                     ["Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers", "Waterproof Hiking Boots"])
-    self.assertEqual(context_data['rain_outfit_twelve_hours'], [])
+    self.assertEqual(context_data['outfit'], expect_outfit)
     self.assertEqual(context_data['colors_current'], ["orange", "red", "brown", "goldenrod", "olive"])
 
   
@@ -309,7 +303,7 @@ class TestGenericClothesIntegration(TestCase):
       expected_return = {
         "comfort": 46.04,
         "waterproofness": 68.75,
-        "outfit": ['Breathable Sun Hat', 'Water-Resistant Softshell', 'Water-Resistant Hiking Pants', 'Waterproof Hiking Boots'],
+        "outfit": [{"name": name, "image": url} for name, url in zip(['Breathable Sun Hat', 'Water-Resistant Softshell', 'Water-Resistant Hiking Pants', 'Waterproof Hiking Boots'], ["generic_clothes/Breathable_Sun_Hat.jpeg", "generic_clothes/Water-Resistant_Softshell.jpeg", "generic_clothes/Water-Resistant_Hiking_Pants.jpeg","generic_clothes/Waterproof_Hiking_Boots.jpeg"])],
         "precipitation_outfit": [],
         "colors": ["orange", "red", "brown", "goldenrod", "olive"]
       }
@@ -553,6 +547,21 @@ class TestGenericClothesModelUnit(TestCase):
 
     # Assert
     self.assertEqual(new_clothes.image, 'generic_clothes/default-shirt.png')
+
+  
+  def test_save_default(self):
+    """
+    Tests that the save method properly assigns a default image.
+    """
+
+    # Arrange
+    new_clothes = GenericClothes(name="Logan's Shirt", clothing_type="MSC", comfort_low=60, comfort_high=100, waterproof_rating=60)
+
+    # Act
+    new_clothes.save()
+
+    # Assert
+    self.assertEqual(new_clothes.image, 'generic_clothes/default.png')
   
   # --------------------------- get_outfit_recommendation ---------------------------
   
@@ -582,11 +591,16 @@ class TestGenericClothesModelUnit(TestCase):
 
       test_clothe_1 = GenericClothes(name="test_clothe_1", clothing_type = "HAT", comfort_low = 10, comfort_high = 20, waterproof_rating = 10)
       test_clothe_1.save()
-      test_outfit_1 = GenericClothes.objects.filter(id=test_clothe_1.id) # needs to be queryset, not object
+
+      test_clothe_2 = GenericClothes(name="test_clothe_2", clothing_type = "MSC", comfort_low = 10, comfort_high = 20, waterproof_rating = 100)
+      test_clothe_2.save()
       
+      test_outfit_1 = GenericClothes.objects.filter(id=test_clothe_1.id) # needs to be queryset, not object
+      test_outfit_2 = GenericClothes.objects.filter(id=test_clothe_2.id)
+
       mock_cc.return_value = 10
       mock_temp.return_value = (test_outfit_1, 100)
-      mock_prec.return_value = ['some more clothes']
+      mock_prec.return_value = test_outfit_2
       mock_color.return_value = ['some colors']
 
       mock_cc_calls = [call(temp, humidity, wind, tolerance_offset, working_offset)]
@@ -595,8 +609,8 @@ class TestGenericClothesModelUnit(TestCase):
       expected_return = {
         "comfort": mock_cc.return_value,
         "waterproofness": mock_temp.return_value[1],
-        "outfit": [test_clothe_1.name],
-        "precipitation_outfit": ['some more clothes'],
+        "outfit": [{"name": test_clothe_1.name, "image": "generic_clothes/default-hat.png"}],
+        "precipitation_outfit": [{"name": test_clothe_2.name, "image": "generic_clothes/default.png"}],
         "colors": ['some colors']
       }
       
@@ -736,9 +750,10 @@ class TestGenericClothesModelUnit(TestCase):
 
     # Act
     outfit = GenericClothes._get_clothes_in_prec(precipitation_chance, average_waterproofing)
-
+    outfit_names = [a.name for a in outfit]
+    
     # Assert
-    self.assertEqual(outfit, ["Umbrella", "Waterproof Tarp"])
+    self.assertEqual(outfit_names, ["Umbrella", "Waterproof Tarp"])
 
   def test_get_clothes_in_prec_dry(self):
     """
