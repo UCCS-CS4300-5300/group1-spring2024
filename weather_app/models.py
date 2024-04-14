@@ -5,7 +5,6 @@ from django.core import validators
 from django.db import models
 from geopy.geocoders import Nominatim
 from django_resized import ResizedImageField
-import os
 
 # https://docs.djangoproject.com/en/5.0/howto/initial-data/#:~:text=You%20can%20load%20data%20by,and%20reloaded%20into%20the%20database to populate the list of generic clothes
 # Must be loaded manually using python manage.py loaddata fixture_generic_clothes.json
@@ -71,8 +70,7 @@ class GenericClothes(models.Model):
       elif self.clothing_type == "SHO":
         image_path = "generic_clothes/default-shoe.png"
 
-      file_name = os.path.basename(image_path)
-      
+      # file_name = os.path.basename(image_path)
       # https://gist.github.com/iambibhas/5051911
       # path = settings.MEDIA_ROOT + image_path
       # file = File(open(path, 'rb'))
@@ -113,11 +111,10 @@ class GenericClothes(models.Model):
       return heat_index - tolerance_offset + working_offset
 
     # If the temperature is less than or equal to 75, use the wind chill
-    else:
-      # equation from https://en.wikipedia.org/wiki/Wind_chill NA wind chill index
-      wind_chill = 35.74 + 0.6215 * temperature - 35.75 * (
-          wind_speed**0.16) + 0.4275 * temperature * (wind_speed**0.16)
-      return wind_chill - tolerance_offset + working_offset
+    # equation from https://en.wikipedia.org/wiki/Wind_chill NA wind chill index
+    wind_chill = 35.74 + 0.6215 * temperature - 35.75 * (
+        wind_speed**0.16) + 0.4275 * temperature * (wind_speed**0.16)
+    return wind_chill - tolerance_offset + working_offset
 
   
   @classmethod
@@ -175,7 +172,7 @@ class GenericClothes(models.Model):
 
     if average_waterproof > precipitation_chance:
       return []
-    elif average_waterproof <= precipitation_chance:
+    else:
       outfit = cls.objects.filter(clothing_type="MIS")
       return list(outfit)
 
@@ -320,18 +317,17 @@ class Weather(models.Model):
     location_data = location_response.json()
 
     # If we don't get an invalid location
-    if ('status' not in location_data):
-      weather_response = requests.get(
-          location_data['properties']['forecastHourly'])
+    if 'status' not in location_data:
+      weather_response = requests.get(location_data['properties']['forecastHourly'], timeout=20)
       # If the api doesn't randomly break continue
       # This occurs when a location is valid but the server just fails for some reason
-      if (weather_response.status_code == 500):
+      if weather_response.status_code == 500:
         return None
       weather_data = weather_response.json()
       return weather_data["properties"][
           "periods"]  # the actual weather forecast
-    else:
-      return None
+    
+    return None
 
   def _format_response(weather_data, location):
     """
@@ -387,7 +383,7 @@ class Weather(models.Model):
         prec["probabilityOfPrecipitation"]["value"] for prec in weather_data
     ]
     humidity = [humid["relativeHumidity"]["value"] for humid in weather_data]
-    windSpeed = [
+    wind_speed = [
         int(windSpeed["windSpeed"].split(" ")[0]) for windSpeed in weather_data
     ]
 
@@ -396,7 +392,7 @@ class Weather(models.Model):
         "temperature": temperature,
         "precipitation": precipitation,
         "humidity": humidity,
-        "wind": windSpeed,
+        "wind": wind_speed,
         "location": location
     }
 
@@ -420,16 +416,6 @@ class Weather(models.Model):
     # Get location raw data from the user
     location = app.geocode(location_input)
     if location:
-      latitude = location.latitude
-      longitude = location.longitude
-      weather_data = Weather._get_weather(latitude, longitude)
-      if weather_data:
-        result = Weather._format_response(weather_data, location)
-        return result
-
-    # failed to get location, e.g. user inputted "Canada"
-    if result == None:
-      location = app.geocode("80918")
       latitude = location.latitude
       longitude = location.longitude
       weather_data = Weather._get_weather(latitude, longitude)

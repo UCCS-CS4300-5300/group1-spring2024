@@ -1,15 +1,15 @@
+import logging
+from itertools import zip_longest
+from rest_framework import status
 from django.shortcuts import redirect, render
 from django.views import View
 from django.contrib import messages
-from .models import Weather, GenericClothes
-from rest_framework import status
 from django.contrib.auth.models import Group
 from django.contrib import messages
+from .models import Weather, GenericClothes
 from .forms import CreateUserForm, AddForm
 
-from itertools import zip_longest
 
-import logging
 logger = logging.getLogger("test_logger")
 
 class TemperatureView(View):
@@ -37,6 +37,10 @@ class TemperatureView(View):
         
         weather_data = Weather.get_weather_forecast(location)
 
+        if not weather_data:
+          return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/recommendation.html', context={'error': 'Please enter a valid location'})
+
+        
         # All of this is formatting the weather data to be calculated in the comfort, which then gets the outfits, which then is rendered.
         # Really no business logic is here, except getting the data in the proper form.
 
@@ -77,12 +81,19 @@ class TemperatureView(View):
     return render(request, 'weather_app/recommendation.html', context)
 
 class GenericClothesListView(View):
+  """
+  Class to manage the inventory view for the GenericClothes model
+  """
+  
   model = GenericClothes
 
   def transform_field_name(self, field_name):
     return field_name.capitalize().replace("_", " ")
   
   def get(self, request, *args, **kwargs):
+    """
+    Get inventory data
+    """
     #DATA FOR TESTING
     # test_cloth = self.model(name="nade", clothing_type="SHO", comfort_low=10, comfort_high=20, waterproof_rating=400)
     # test_cloth.save()

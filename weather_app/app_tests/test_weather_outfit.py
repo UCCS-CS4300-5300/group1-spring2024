@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from unittest.mock import patch, call
 from django.urls import reverse
 from .. import models
+from .utils import NewDate, NewDatetime
 
 class TestGenericClothesIntegration(TestCase):
   """
@@ -108,18 +109,7 @@ class TestGenericClothesIntegration(TestCase):
 
     Also have to stub the dates since they can change the result of the tests over time.
     """
-
-    class NewDate(datetime.date):
-      @classmethod
-      def today(cls):
-        return cls(2022, 10, 22)
-
-    class NewDatetime(datetime.datetime):
-      @classmethod
-      def now(cls, tz):
-        mock_datetime = cls(2022, 10, 22, 12, 0, 0, 0)
-        return mock_datetime
-    
+  
     # arrange
     context = {"tolerance_offset": 5, "working_offset": 10, "location": 10001, "checkbox_colors": "on"}
 
@@ -213,7 +203,7 @@ class TestGenericClothesIntegration(TestCase):
     # assert
     self.assertEqual(response.status_code, 200)
     self.assertEqual(context_data['outfit'], expect_outfit)
-    self.assertEqual(context_data['colors_current'], ["orange", "red", "brown", "goldenrod", "olive"])
+    self.assertEqual(context_data['colors_current'], ["yellow", "aqua", "skyblue", "coral", "limegreen"])
 
   
   def test_normal_get_outfit_recommendation(self):
@@ -222,17 +212,6 @@ class TestGenericClothesIntegration(TestCase):
     * More of a functional or modular test than integration.
     * Happy Test    
     """
-
-    class NewDate(datetime.date):
-      @classmethod
-      def today(cls):
-        return cls(2022, 10, 22)
-
-    class NewDatetime(datetime.datetime):
-      @classmethod
-      def now(cls):
-        mock_datetime = cls(2022, 10, 22, 12, 0, 0, 0)
-        return mock_datetime
 
     # need to patch to avoid API calls and ensure dates are repeatable
     with (
@@ -316,7 +295,7 @@ class TestGenericClothesIntegration(TestCase):
         "waterproofness": 68.75,
         "outfit": [{"name": name, "image": url} for name, url in zip(['Breathable Sun Hat', 'Water-Resistant Softshell', 'Water-Resistant Hiking Pants', 'Waterproof Hiking Boots'], ["/media/generic_clothes/Breathable_Sun_Hat.jpeg", "/media/generic_clothes/Water-Resistant_Softshell.jpeg", "/media/generic_clothes/Water-Resistant_Hiking_Pants.jpeg","/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"])],
         "precipitation_outfit": [],
-        "colors": ["orange", "red", "brown", "goldenrod", "olive"]
+        "colors": ["yellow", "aqua", "skyblue", "coral", "limegreen"]
       }
   
       # Act
@@ -614,7 +593,7 @@ class TestGenericClothesModelUnit(TestCase):
       mock_color.return_value = ['some colors']
 
       mock_cc_calls = [call(temp, humidity, wind, tolerance_offset, working_offset)]
-      mock_temp_calls = [call(mock_cc.return_value, precipitation)]
+      mock_temp_calls = [call(mock_cc.return_value)]
       mock_prec_calls = [call(precipitation, mock_temp.return_value[1])]
       expected_return = {
         "comfort": mock_cc.return_value,
@@ -711,8 +690,8 @@ class TestGenericClothesModelUnit(TestCase):
     """
 
     with self.assertRaises(ValueError):
-      GenericClothes._get_clothes_in_temp(20000, 0)
-      GenericClothes._get_clothes_in_temp(-5000, 0)
+      GenericClothes._get_clothes_in_temp(20000)
+      GenericClothes._get_clothes_in_temp(-5000)
 
   # ---------------------------------------------------------------------------------
 

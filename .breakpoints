@@ -3,9 +3,9 @@
     "weather_app/app_tests/test_weather_outfit.py": [
       {
         "id": "7e5a7da0-6d98-4623-8620-a3b06c09b74e",
-        "line": 135,
-        "version": 2461,
-        "index": 6431
+        "line": 123,
+        "version": 2583,
+        "index": 6102
       }
     ]
   }
