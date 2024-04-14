@@ -1,7 +1,7 @@
+import datetime
+from unittest.mock import patch
 from django.test import TestCase
 from ..models import GenericClothes
-import datetime
-from unittest.mock import patch, call, Mock
 from .. import models
 
 class TestColorGenerationUnit(TestCase):
@@ -29,7 +29,7 @@ class TestColorGenerationUnit(TestCase):
 
     class NewDatetime(datetime.datetime):
       @classmethod
-      def now(cls):
+      def now(cls, tz):
         mock_datetime = cls(2022, 7, 22, 12, 0, 0, 0)
         return mock_datetime
     
@@ -64,7 +64,7 @@ class TestColorGenerationUnit(TestCase):
 
     class NewDatetime(datetime.datetime):
       @classmethod
-      def now(cls):
+      def now(cls, tz):
         mock_datetime = cls(2022, 10, 22, 12, 0, 0, 0)
         return mock_datetime
 

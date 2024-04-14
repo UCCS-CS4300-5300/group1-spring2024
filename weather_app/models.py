@@ -5,10 +5,6 @@ from django.core import validators
 from django.db import models
 from geopy.geocoders import Nominatim
 from django_resized import ResizedImageField
-from PIL import Image
-from django.conf import settings
-from pathlib import Path
-from django.core.files import File
 import os
 
 # https://docs.djangoproject.com/en/5.0/howto/initial-data/#:~:text=You%20can%20load%20data%20by,and%20reloaded%20into%20the%20database to populate the list of generic clothes
@@ -125,7 +121,7 @@ class GenericClothes(models.Model):
 
   
   @classmethod
-  def _get_clothes_in_temp(cls, comfort, precipitation_chance):
+  def _get_clothes_in_temp(cls, comfort):
     """
     Function that, given a comfort value, iterates through the current clothes in the database.
     Returns:
@@ -212,7 +208,7 @@ class GenericClothes(models.Model):
 
     comfort = cls._calculate_comfort(temperature, humidity, wind,
                                      tolerance_offset, working_offset)
-    outfit, waterproofness = cls._get_clothes_in_temp(comfort, precipitation)
+    outfit, waterproofness = cls._get_clothes_in_temp(comfort)
     precipitation_clothes = cls._get_clothes_in_prec(precipitation,
                                                      waterproofness)
     colors = cls._get_color_palette()
@@ -320,7 +316,7 @@ class Weather(models.Model):
     requests_cache.install_cache(
         'weather_cache', expire_after=3600)  # Cache expires after 1 hour
     base_url = f"https://api.weather.gov/points/{latitude},{longitude}"
-    location_response = requests.get(base_url)
+    location_response = requests.get(base_url, timeout=20) # added 20 seconds timeout
     location_data = location_response.json()
 
     # If we don't get an invalid location

@@ -1,19 +1,11 @@
 from django.shortcuts import redirect, render
-from django.http import JsonResponse, HttpResponse
-from django.views import View, generic
+from django.views import View
 from django.contrib import messages
 from .models import Weather, GenericClothes
-from datetime import datetime
 from rest_framework import status
-
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib import messages
-from .forms import *
-from typing import Any
+from .forms import CreateUserForm, AddForm
 
 from itertools import zip_longest
 
@@ -36,11 +28,10 @@ class TemperatureView(View):
     color_selected = request.GET.get('checkbox_colors')
 
     context = {}
-    
+
     # User inputted the form
     if tolerance_offset and working_offset:
       try:
-        
         tolerance_offset = int(tolerance_offset)
         working_offset = int(working_offset)
         
@@ -48,7 +39,7 @@ class TemperatureView(View):
 
         # All of this is formatting the weather data to be calculated in the comfort, which then gets the outfits, which then is rendered.
         # Really no business logic is here, except getting the data in the proper form.
-      
+
         current_weather_data = [
           int(weather_data[x][0]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
         ]
@@ -76,15 +67,15 @@ class TemperatureView(View):
         context["outfit"] = [(c0a, c6a, c12a) for c0a, c6a, c12a in zip(current['outfit'], next['outfit'], final['outfit'])]
 
         context["rain_outfit"] = [(c0a, c6a, c12a) for c0a, c6a, c12a in zip_longest(current['precipitation_outfit'], next['precipitation_outfit'], final['precipitation_outfit'], fillvalue="Missing...")]
-        
+
         if color_selected:
           context["colors_current"] = current['colors']
-              
+
       except Exception as e:
         context["error"] = f"Error, please try again. Error message: {e}"
-    
+
     return render(request, 'weather_app/recommendation.html', context)
-  
+
 class GenericClothesListView(View):
   model = GenericClothes
 
@@ -99,7 +90,7 @@ class GenericClothesListView(View):
     # Get field model names for the context so frontend knows what options we can query clothing by
     context = {}
     field_name = request.GET.get('filterBy')
-    if(field_name == None):
+    if field_name == None:
       field_name = "name" # If no filter is provided sort by name by default
     logger.debug(field_name)
     fields = self.model._meta.get_fields()
@@ -131,7 +122,7 @@ class WeatherView(View):
     # get weather data
     weather_data = Weather.get_weather_forecast(location)
 
-    if(weather_data):
+    if weather_data:
       # template is expecting dictionary with following values
       context = {
           'temp_forecast': weather_data['temperature'],
@@ -141,7 +132,7 @@ class WeatherView(View):
           'day_forecast': weather_data['hours'][:24],
           'location' : weather_data['location'],
       }
-  
+
       return render(request, 'weather_app/index.html', context)
     else:
       return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/index.html', context={'error_message': 'Please enter a valid location'})
@@ -196,7 +187,7 @@ def deleteItem(request, id):
   if request.method == 'POST':
     post.delete()
     return redirect('inventory')
-  
+
   context = {'item': post}
   return render(request, 'weather_app/delete_item.html', context)
 
