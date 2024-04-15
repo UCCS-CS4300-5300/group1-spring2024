@@ -26,8 +26,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # The home page url assumes location is passed in the request
     path('', WeatherView.as_view(), name='home'),
-    path('recommendation', TemperatureView.as_view(), name='recommendation'),
-    path('inventory', GenericClothesListView.as_view(), name='inventory'),
+    path('recommendation/', TemperatureView.as_view(), name='recommendation'),
+    path('inventory/<int:user_id>/', GenericClothesListView.as_view(), name='inventory'),
     path('inventory/add_item', views.addItem, name='add_item'),
     path('inventory/delete_item/<int:id>', views.deleteItem, name='delete_item'),
 

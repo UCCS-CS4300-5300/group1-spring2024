@@ -1,13 +1,18 @@
 import logging
 from itertools import zip_longest
 from rest_framework import status
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views import View
 from django.contrib import messages
 from django.contrib.auth.models import Group
 from django.contrib import messages
-from .models import Weather, GenericClothes
+from .models import Weather, GenericClothes, AppUser
 from .forms import CreateUserForm, AddForm
+from .decorators import allowed_users
+
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 logger = logging.getLogger("test_logger")
@@ -80,17 +85,21 @@ class TemperatureView(View):
 
     return render(request, 'weather_app/recommendation.html', context)
 
+
 class GenericClothesListView(View):
   """
   Class to manage the inventory view for the GenericClothes model
   """
-  
   model = GenericClothes
 
   def transform_field_name(self, field_name):
     return field_name.capitalize().replace("_", " ")
-  
-  def get(self, request, *args, **kwargs):
+    
+  @method_decorator(login_required(login_url='login'), name='dispatch')
+  @method_decorator(allowed_users(allowed_roles=['user']))
+  def get(self, request, user_id, *args, **kwargs):
+    user = get_object_or_404(AppUser, pk=user_id)
+    
     """
     Get inventory data
     """
@@ -167,7 +176,8 @@ class RegisterUser(View):
         username = form.cleaned_data.get('username')
         #create a new group for the user so that things can be admin access only
         group = Group.objects.get_or_create(name='user__role')[0]
-        user.groups.add(group) 
+        user.groups.add(group)
+        app_user = AppUser.objects.create(username=username)
 
         messages.success(request, 'Account was created for ' + username)
         return redirect('login') #after successful registration, redirect to login page

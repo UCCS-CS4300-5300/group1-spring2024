@@ -425,15 +425,10 @@ class Weather(models.Model):
 
     return None
 
-class AppUser(models.Model):
+class AppUser(model.Model):
   username = models.CharField(max_length=30, unique=True)
-  inventory = models.ForeignKey(GenericClothes, related_name='users', on_delete=models.CASCADE)
-  
-  def __str__(self):
-    return self.name
-  def get_absolute_url(self):
-    return reverse('user-detail', args=[str(self.id)])
-    
+  inventory
+
 """ def get_location():
   app = Nominatim(user_agent="Weather App")
   location_input = input("Enter your location: ")
