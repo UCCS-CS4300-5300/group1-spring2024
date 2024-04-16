@@ -5,7 +5,9 @@ from django.contrib import messages
 from .models import Weather, GenericClothes
 from datetime import datetime
 from rest_framework import status
+import boto3
 
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
@@ -180,9 +182,29 @@ def addItem(request):
 
     if request.method == 'POST':
 
-      form = AddForm(request.POST)
-
+      form = AddForm(request.POST,  request.FILES)
+      
       if form.is_valid():
+        image_file = request.FILES['photo']
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+
+        # Upload the image to S3
+        s3 = boto3.client('s3', aws_access_key_id='AKIAW3MEAQDEQGGIBI4A', aws_secret_access_key='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')
+        image_path = f'inventory/photos/{image_file.name}_{timestamp}'
+
+        try:
+            s3.upload_fileobj(image_file, 'uccs-ase', image_path)
+        except Exception as e:
+            # Handle the exception, perhaps log it
+            print(f"Error uploading image to S3: {e}")
+            return render(request, 'weather_app/error.html', {'message': 'Error uploading image. Please try again.'})
+
+        # Generate the image URL
+        image_url = f'https://uccs-ase.s3.amazonaws.com/{image_path}'
+
+        # Save the image URL to the form
+        form.instance.image_url = image_url
+        form.instance.photo = None
         post = form.save(commit=False)
         post.save()
 

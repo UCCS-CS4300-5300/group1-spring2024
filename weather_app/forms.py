@@ -12,4 +12,4 @@ class CreateUserForm(UserCreationForm):
 class AddForm(ModelForm):
     class Meta:
         model = GenericClothes
-        fields = ('name', 'clothing_type', 'comfort_low', 'comfort_high', 'waterproof_rating')
+        fields = ('name', 'clothing_type', 'comfort_low', 'comfort_high', 'waterproof_rating', 'photo', 'image_url')

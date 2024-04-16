@@ -35,6 +35,8 @@ class GenericClothes(models.Model):
   comfort_low = models.IntegerField()
   comfort_high = models.IntegerField()
   waterproof_rating = models.IntegerField()  # percentage from 1-100
+  photo = models.ImageField(upload_to='inventory/photos/')
+  image_url = models.CharField(max_length=500, blank='True')
 
   def __str__(self):
     return self.name
