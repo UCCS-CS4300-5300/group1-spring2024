@@ -7,6 +7,36 @@ body {
     background-color: rgb(255, 255, 255);
     font-family: "Lato", sans-serif;
 }
+.btn-toggle {
+  font-style: default;
+  padding : 10px 15px;
+  display: inline-block;
+  position: relative;
+  
+}
+.btn-toggle:hover {
+    box-shadow: 3px 2px 0 0;
+    font-style : bold;
+    border: 2px solid black;
+    transition: 100ms ease;
+  
+}
+.btn-toggle:after{
+background: none repeat scroll 0 0 transparent;
+  bottom: 0;
+  content: "";
+  display: block;
+  height: 2px;
+  left: 50%;
+  position: absolute;
+  background: black;
+  transition: width 0.3s ease 0s, left 0.3s ease 0s;
+  width: 0;
+}
+.btn-toggle:hover:after { 
+  width: 100%; 
+  left: 0; 
+}
 
 /* Code to implement interactive styling */
 .active {
