@@ -1,5 +1,638 @@
-[{"model": "weather_app.GenericClothes", "pk": 0, "fields": {"name": "Ultra Warm Trapper Hat", "clothing_type": "HAT", "comfort_low": -30, "comfort_high": -10, "waterproof_rating": 70}}, {"model": "weather_app.GenericClothes", "pk": 1, "fields": {"name": "Wool Beanie", "clothing_type": "HAT", "comfort_low": -10, "comfort_high": 10, "waterproof_rating": 50}}, {"model": "weather_app.GenericClothes", "pk": 2, "fields": {"name": "Thermal Running Hat", "clothing_type": "HAT", "comfort_low": 10, "comfort_high": 30, "waterproof_rating": 30}}, {"model": "weather_app.GenericClothes", "pk": 3, "fields": {"name": "Lightweight Rain Hat", "clothing_type": "HAT", "comfort_low": 30, "comfort_high": 40, "waterproof_rating": 100}}, {"model": "weather_app.GenericClothes", "pk": 4, "fields": {"name": "Breathable Sun Hat", "clothing_type": "HAT", "comfort_low": 40, "comfort_high": 50, "waterproof_rating": 20}}, {"model": "weather_app.GenericClothes", "pk": 5, "fields": {"name": "Cotton Baseball Cap", "clothing_type": "HAT", "comfort_low": 50, "comfort_high": 60, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 6, "fields": {"name": "Ventilated Bucket Hat", "clothing_type": "HAT", "comfort_low": 60, "comfort_high": 70, "waterproof_rating": 15}}, {"model": "weather_app.GenericClothes", "pk": 7, "fields": {"name": "Straw Fedora", "clothing_type": "HAT", "comfort_low": 70, "comfort_high": 80, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 8, "fields": {"name": "Light Visor", "clothing_type": "HAT", "comfort_low": 80, "comfort_high": 90, "waterproof_rating": 5}}, {"model": "weather_app.GenericClothes", "pk": 9, "fields": {"name": "Ultra-light Running Cap", "clothing_type": "HAT", "comfort_low": 90, "comfort_high": 100, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 10, "fields": {"name": "Thermal Fleece Shirt", "clothing_type": "SHR", "comfort_low": -20, "comfort_high": 0, "waterproof_rating": 20}}, {"model": "weather_app.GenericClothes", "pk": 11, "fields": {"name": "Heavy Wool Sweater", "clothing_type": "SHR", "comfort_low": 0, "comfort_high": 20, "waterproof_rating": 30}}, {"model": "weather_app.GenericClothes", "pk": 12, "fields": {"name": "Insulated Long Sleeve", "clothing_type": "SHR", "comfort_low": 20, "comfort_high": 40, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 13, "fields": {"name": "Water-Resistant Softshell", "clothing_type": "SHR", "comfort_low": 40, "comfort_high": 50, "waterproof_rating": 70}}, {"model": "weather_app.GenericClothes", "pk": 14, "fields": {"name": "Breathable Long Sleeve", "clothing_type": "SHR", "comfort_low": 50, "comfort_high": 60, "waterproof_rating": 15}}, {"model": "weather_app.GenericClothes", "pk": 15, "fields": {"name": "Cotton T-Shirt", "clothing_type": "SHR", "comfort_low": 60, "comfort_high": 70, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 16, "fields": {"name": "Performance Fabric Tee", "clothing_type": "SHR", "comfort_low": 70, "comfort_high": 80, "waterproof_rating": 5}}, {"model": "weather_app.GenericClothes", "pk": 17, "fields": {"name": "Lightweight Athletic Shirt", "clothing_type": "SHR", "comfort_low": 80, "comfort_high": 90, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 18, "fields": {"name": "Ultra-lightweight Tank Top", "clothing_type": "SHR", "comfort_low": 90, "comfort_high": 100, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 19, "fields": {"name": "Mesh Ventilated Running Shirt", "clothing_type": "SHR", "comfort_low": 100, "comfort_high": 110, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 20, "fields": {"name": "Insulated Winter Pants", "clothing_type": "PNT", "comfort_low": -20, "comfort_high": 0, "waterproof_rating": 80}}, {"model": "weather_app.GenericClothes", "pk": 21, "fields": {"name": "Thermal Wool Trousers", "clothing_type": "PNT", "comfort_low": 0, "comfort_high": 20, "waterproof_rating": 30}}, {"model": "weather_app.GenericClothes", "pk": 22, "fields": {"name": "Fleece-Lined Softshell Pants", "clothing_type": "PNT", "comfort_low": 20, "comfort_high": 40, "waterproof_rating": 70}}, {"model": "weather_app.GenericClothes", "pk": 23, "fields": {"name": "Water-Resistant Hiking Pants", "clothing_type": "PNT", "comfort_low": 40, "comfort_high": 50, "waterproof_rating": 90}}, {"model": "weather_app.GenericClothes", "pk": 24, "fields": {"name": "Convertible Cargo Pants", "clothing_type": "PNT", "comfort_low": 50, "comfort_high": 60, "waterproof_rating": 20}}, {"model": "weather_app.GenericClothes", "pk": 25, "fields": {"name": "Breathable Athletic Pants", "clothing_type": "PNT", "comfort_low": 60, "comfort_high": 70, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 26, "fields": {"name": "Lightweight Chinos", "clothing_type": "PNT", "comfort_low": 70, "comfort_high": 80, "waterproof_rating": 5}}, {"model": "weather_app.GenericClothes", "pk": 27, "fields": {"name": "Cotton Linen Pants", "clothing_type": "PNT", "comfort_low": 80, "comfort_high": 90, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 28, "fields": {"name": "Ultra-light Running Tights", "clothing_type": "PNT", "comfort_low": 90, "comfort_high": 100, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 29, "fields": {"name": "Ventilated Mesh Shorts", "clothing_type": "PNT", "comfort_low": 100, "comfort_high": 110, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 30, "fields": {"name": "Insulated Winter Boots", "clothing_type": "SHO", "comfort_low": -20, "comfort_high": 10, "waterproof_rating": 90}}, {"model": "weather_app.GenericClothes", "pk": 31, "fields": {"name": "Waterproof Hiking Boots", "clothing_type": "SHO", "comfort_low": 10, "comfort_high": 50, "waterproof_rating": 95}}, {"model": "weather_app.GenericClothes", "pk": 32, "fields": {"name": "Breathable Trail Running Shoes", "clothing_type": "SHO", "comfort_low": 50, "comfort_high": 70, "waterproof_rating": 30}}, {"model": "weather_app.GenericClothes", "pk": 33, "fields": {"name": "Lightweight Athletic Sneakers", "clothing_type": "SHO", "comfort_low": 70, "comfort_high": 90, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 34, "fields": {"name": "Ventilated Mesh Sandals", "clothing_type": "SHO", "comfort_low": 90, "comfort_high": 110, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 35, "fields": {"name": "Ultra-Breathable Sports Tank", "clothing_type": "SHR", "comfort_low": 110, "comfort_high": 130, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 36, "fields": {"name": "Ultra-light Performance Shorts", "clothing_type": "PNT", "comfort_low": 110, "comfort_high": 130, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 37, "fields": {"name": "Breathable Mesh Running Shoes", "clothing_type": "SHO", "comfort_low": 110, "comfort_high": 130, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 38, "fields": {"name": "Ultra-Light Solar Shield Hat", "clothing_type": "HAT", "comfort_low": 100, "comfort_high": 130, "waterproof_rating": 10}}, {"model": "weather_app.GenericClothes", "pk": 39, "fields": {"name": "Sub Zero Heated Helmet", "clothing_type": "HAT", "comfort_low": -460, "comfort_high": -30, "waterproof_rating": 100}}, {"model": "weather_app.GenericClothes", "pk": 40, "fields": {"name": "Sub Zero Heated Vest", "clothing_type": "SHR", "comfort_low": -460, "comfort_high": -30, "waterproof_rating": 100}}, {"model": "weather_app.GenericClothes", "pk": 41, "fields": {"name": "Sub Zero Heated Pants", "clothing_type": "PNT", "comfort_low": -460, "comfort_high": -30, "waterproof_rating": 100}}, {"model": "weather_app.GenericClothes", "pk": 42, "fields": {"name": "Sub Zero Heated Shoes", "clothing_type": "SHO", "comfort_low": -460, "comfort_high": -30, "waterproof_rating": 100}}, {"model": "weather_app.GenericClothes", "pk": 43, "fields": {"name": "Fire and Thermal Radation Immune Aluminized Helmet", "clothing_type": "HAT", "comfort_low": 130, "comfort_high": 1000, "waterproof_rating": 100}}, {"model": "weather_app.GenericClothes", "pk": 44, "fields": {"name": "Fire and Thermal Radation Immune Aluminized Coat", "clothing_type": "SHR", "comfort_low": 130, "comfort_high": 1000, "waterproof_rating": 100}}, {"model": "weather_app.GenericClothes", "pk": 45, "fields": {"name": "Fire and Thermal Radation Immune Aluminized Pants", "clothing_type": "PNT", "comfort_low": 130, "comfort_high": 1000, "waterproof_rating": 100}}, {"model": "weather_app.GenericClothes", "pk": 46, "fields": {"name": "Fire and Thermal Radation Immune Aluminized Foot Protection", "clothing_type": "SHO", "comfort_low": 130, "comfort_high": 1000, "waterproof_rating": 100}}, {"model": "weather_app.GenericClothes", "pk": 47, "fields": {"name": "Tungsten Lined Air Conditioned Foot Protection", "clothing_type": "SHO", "comfort_low": 1000, "comfort_high": 6100, "waterproof_rating": 100}}, {"model": "weather_app.GenericClothes", "pk": 48, "fields": {"name": "Tungsten Lined Air Conditioned Pants", "clothing_type": "PNT", "comfort_low": 1000, "comfort_high": 6100, "waterproof_rating": 100}}, 
-    {"model": "weather_app.GenericClothes", "pk": 49, "fields": {"name": "Tungsten Lined Air Conditioned Vest", "clothing_type": "SHR", "comfort_low": 1000, "comfort_high": 6100, "waterproof_rating": 100}}, 
-    {"model": "weather_app.GenericClothes", "pk": 50, "fields": {"name": "Tungsten Lined Air Conditioned Helmet", "clothing_type": "HAT", "comfort_low": 1000, "comfort_high": 6100, "waterproof_rating": 100}}, 
-    {"model": "weather_app.GenericClothes", "pk": 51, "fields": {"name": "Umbrella", "clothing_type": "MIS", "comfort_low": -460, "comfort_high": 6100, "waterproof_rating": 100}}, 
-    {"model": "weather_app.GenericClothes", "pk": 52, "fields": {"name": "Waterproof Tarp", "clothing_type": "MIS", "comfort_low": -460, "comfort_high": 6100, "waterproof_rating": 100}}]
+[
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 0,
+        "fields": {
+            "name": "Ultra Warm Trapper Hat",
+            "clothing_type": "HAT",
+            "comfort_low": -30,
+            "comfort_high": -10,
+            "waterproof_rating": 70,
+            "image": "generic_clothes/Ultra_Warm_Trapper_Hat.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 1,
+        "fields": {
+            "name": "Wool Beanie",
+            "clothing_type": "HAT",
+            "comfort_low": -10,
+            "comfort_high": 10,
+            "waterproof_rating": 50,
+            "image": "generic_clothes/Wool_Beanie.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 2,
+        "fields": {
+            "name": "Thermal Running Hat",
+            "clothing_type": "HAT",
+            "comfort_low": 10,
+            "comfort_high": 30,
+            "waterproof_rating": 30,
+            "image": "generic_clothes/Thermal_Running_Hat.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 3,
+        "fields": {
+            "name": "Lightweight Rain Hat",
+            "clothing_type": "HAT",
+            "comfort_low": 30,
+            "comfort_high": 40,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Lightweight_Rain_Hat.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 4,
+        "fields": {
+            "name": "Breathable Sun Hat",
+            "clothing_type": "HAT",
+            "comfort_low": 40,
+            "comfort_high": 50,
+            "waterproof_rating": 20,
+            "image": "generic_clothes/Breathable_Sun_Hat.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 5,
+        "fields": {
+            "name": "Cotton Baseball Cap",
+            "clothing_type": "HAT",
+            "comfort_low": 50,
+            "comfort_high": 60,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Cotton_Baseball_Cap.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 6,
+        "fields": {
+            "name": "Ventilated Bucket Hat",
+            "clothing_type": "HAT",
+            "comfort_low": 60,
+            "comfort_high": 70,
+            "waterproof_rating": 15,
+            "image": "generic_clothes/Ventilated_Bucket_Hat.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 7,
+        "fields": {
+            "name": "Straw Fedora",
+            "clothing_type": "HAT",
+            "comfort_low": 70,
+            "comfort_high": 80,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Straw_Fedora.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 8,
+        "fields": {
+            "name": "Light Visor",
+            "clothing_type": "HAT",
+            "comfort_low": 80,
+            "comfort_high": 90,
+            "waterproof_rating": 5,
+            "image": "generic_clothes/Light_Visor.jpg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 9,
+        "fields": {
+            "name": "Ultra-light Running Cap",
+            "clothing_type": "HAT",
+            "comfort_low": 90,
+            "comfort_high": 100,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Ultra-light_Running_Cap.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 10,
+        "fields": {
+            "name": "Thermal Fleece Shirt",
+            "clothing_type": "SHR",
+            "comfort_low": -20,
+            "comfort_high": 0,
+            "waterproof_rating": 20,
+            "image": "generic_clothes/Thermal_Fleece_Shirt.png"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 11,
+        "fields": {
+            "name": "Heavy Wool Sweater",
+            "clothing_type": "SHR",
+            "comfort_low": 0,
+            "comfort_high": 20,
+            "waterproof_rating": 30,
+            "image": "generic_clothes/Heavy_Wool_Sweater.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 12,
+        "fields": {
+            "name": "Insulated Long Sleeve",
+            "clothing_type": "SHR",
+            "comfort_low": 20,
+            "comfort_high": 40,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Insulated_Long_Sleeve.jpg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 13,
+        "fields": {
+            "name": "Water-Resistant Softshell",
+            "clothing_type": "SHR",
+            "comfort_low": 40,
+            "comfort_high": 50,
+            "waterproof_rating": 70,
+            "image": "generic_clothes/Water-Resistant_Softshell.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 14,
+        "fields": {
+            "name": "Breathable Long Sleeve",
+            "clothing_type": "SHR",
+            "comfort_low": 50,
+            "comfort_high": 60,
+            "waterproof_rating": 15,
+            "image": "generic_clothes/Breathable_Long_Sleeve.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 15,
+        "fields": {
+            "name": "Cotton T-Shirt",
+            "clothing_type": "SHR",
+            "comfort_low": 60,
+            "comfort_high": 70,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Cotton_T-Shirt.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 16,
+        "fields": {
+            "name": "Performance Fabric Tee",
+            "clothing_type": "SHR",
+            "comfort_low": 70,
+            "comfort_high": 80,
+            "waterproof_rating": 5,
+            "image": "generic_clothes/Performance_Fabric_Tee.png"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 17,
+        "fields": {
+            "name": "Lightweight Athletic Shirt",
+            "clothing_type": "SHR",
+            "comfort_low": 80,
+            "comfort_high": 90,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Lightweight_Athletic_Shirt.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 18,
+        "fields": {
+            "name": "Ultra-lightweight Tank Top",
+            "clothing_type": "SHR",
+            "comfort_low": 90,
+            "comfort_high": 100,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Ultra-lightweight_Tank_Top.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 19,
+        "fields": {
+            "name": "Mesh Ventilated Running Shirt",
+            "clothing_type": "SHR",
+            "comfort_low": 100,
+            "comfort_high": 110,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Mesh_Ventilated_Running_Shirt.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 20,
+        "fields": {
+            "name": "Insulated Winter Pants",
+            "clothing_type": "PNT",
+            "comfort_low": -20,
+            "comfort_high": 0,
+            "waterproof_rating": 80,
+            "image": "generic_clothes/Insulated_Winter_Pants.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 21,
+        "fields": {
+            "name": "Thermal Wool Trousers",
+            "clothing_type": "PNT",
+            "comfort_low": 0,
+            "comfort_high": 20,
+            "waterproof_rating": 30,
+            "image": "generic_clothes/Thermal_Wool_Trousers.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 22,
+        "fields": {
+            "name": "Fleece-Lined Softshell Pants",
+            "clothing_type": "PNT",
+            "comfort_low": 20,
+            "comfort_high": 40,
+            "waterproof_rating": 70,
+            "image": "generic_clothes/Fleece-Lined_Softshell_Pants.jpg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 23,
+        "fields": {
+            "name": "Water-Resistant Hiking Pants",
+            "clothing_type": "PNT",
+            "comfort_low": 40,
+            "comfort_high": 50,
+            "waterproof_rating": 90,
+            "image": "generic_clothes/Water-Resistant_Hiking_Pants.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 24,
+        "fields": {
+            "name": "Convertible Cargo Pants",
+            "clothing_type": "PNT",
+            "comfort_low": 50,
+            "comfort_high": 60,
+            "waterproof_rating": 20,
+            "image": "generic_clothes/Convertible_Cargo_Pants.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 25,
+        "fields": {
+            "name": "Breathable Athletic Pants",
+            "clothing_type": "PNT",
+            "comfort_low": 60,
+            "comfort_high": 70,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Breathable_Athletic_Pants.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 26,
+        "fields": {
+            "name": "Lightweight Chinos",
+            "clothing_type": "PNT",
+            "comfort_low": 70,
+            "comfort_high": 80,
+            "waterproof_rating": 5,
+            "image": "generic_clothes/Lightweight_Chinos.jpg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 27,
+        "fields": {
+            "name": "Cotton Linen Pants",
+            "clothing_type": "PNT",
+            "comfort_low": 80,
+            "comfort_high": 90,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Cotton_Linen_Pants.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 28,
+        "fields": {
+            "name": "Ultra-light Running Tights",
+            "clothing_type": "PNT",
+            "comfort_low": 90,
+            "comfort_high": 100,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Ultra-light_Running_Tights.jpg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 29,
+        "fields": {
+            "name": "Ventilated Mesh Shorts",
+            "clothing_type": "PNT",
+            "comfort_low": 100,
+            "comfort_high": 110,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Ventilated_Mesh_Shorts.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 30,
+        "fields": {
+            "name": "Insulated Winter Boots",
+            "clothing_type": "SHO",
+            "comfort_low": -20,
+            "comfort_high": 10,
+            "waterproof_rating": 90,
+            "image": "generic_clothes/Insulated_Winter_Boots.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 31,
+        "fields": {
+            "name": "Waterproof Hiking Boots",
+            "clothing_type": "SHO",
+            "comfort_low": 10,
+            "comfort_high": 50,
+            "waterproof_rating": 95,
+            "image": "generic_clothes/Waterproof_Hiking_Boots.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 32,
+        "fields": {
+            "name": "Breathable Trail Running Shoes",
+            "clothing_type": "SHO",
+            "comfort_low": 50,
+            "comfort_high": 70,
+            "waterproof_rating": 30,
+            "image": "generic_clothes/Breathable_Trail_Running_Shoes.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 33,
+        "fields": {
+            "name": "Lightweight Athletic Sneakers",
+            "clothing_type": "SHO",
+            "comfort_low": 70,
+            "comfort_high": 90,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Lightweight_Athletic_Sneakers.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 34,
+        "fields": {
+            "name": "Ventilated Mesh Sandals",
+            "clothing_type": "SHO",
+            "comfort_low": 90,
+            "comfort_high": 110,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Ventilated_Mesh_Sandals.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 35,
+        "fields": {
+            "name": "Ultra-Breathable Sports Tank",
+            "clothing_type": "SHR",
+            "comfort_low": 110,
+            "comfort_high": 130,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Ultra-Breathable_Sports_Tank.jpg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 36,
+        "fields": {
+            "name": "Ultra-light Performance Shorts",
+            "clothing_type": "PNT",
+            "comfort_low": 110,
+            "comfort_high": 130,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Ultra-light_Performance_Shorts.jpg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 37,
+        "fields": {
+            "name": "Breathable Mesh Running Shoes",
+            "clothing_type": "SHO",
+            "comfort_low": 110,
+            "comfort_high": 130,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Breathable_Mesh_Running_Shoes.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 38,
+        "fields": {
+            "name": "Ultra-Light Solar Shield Hat",
+            "clothing_type": "HAT",
+            "comfort_low": 100,
+            "comfort_high": 130,
+            "waterproof_rating": 10,
+            "image": "generic_clothes/Ultra-Light_Solar_Shield_Hat.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 39,
+        "fields": {
+            "name": "Sub Zero Heated Helmet",
+            "clothing_type": "HAT",
+            "comfort_low": -460,
+            "comfort_high": -30,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Sub_Zero_Heated_Helmet.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 40,
+        "fields": {
+            "name": "Sub Zero Heated Vest",
+            "clothing_type": "SHR",
+            "comfort_low": -460,
+            "comfort_high": -30,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Sub_Zero_Heated_Vest.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 41,
+        "fields": {
+            "name": "Sub Zero Heated Pants",
+            "clothing_type": "PNT",
+            "comfort_low": -460,
+            "comfort_high": -30,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Sub_Zero_Heated_Pants.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 42,
+        "fields": {
+            "name": "Sub Zero Heated Shoes",
+            "clothing_type": "SHO",
+            "comfort_low": -460,
+            "comfort_high": -30,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Sub_Zero_Heated_Shoes.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 43,
+        "fields": {
+            "name": "Fire and Thermal Radation Immune Aluminized Helmet",
+            "clothing_type": "HAT",
+            "comfort_low": 130,
+            "comfort_high": 1000,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Fire_and_Thermal_Radation_Immune_Aluminized_Helmet.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 44,
+        "fields": {
+            "name": "Fire and Thermal Radation Immune Aluminized Coat",
+            "clothing_type": "SHR",
+            "comfort_low": 130,
+            "comfort_high": 1000,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Fire_and_Thermal_Radation_Immune_Aluminized_Coat.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 45,
+        "fields": {
+            "name": "Fire and Thermal Radation Immune Aluminized Pants",
+            "clothing_type": "PNT",
+            "comfort_low": 130,
+            "comfort_high": 1000,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Fire_and_Thermal_Radation_Immune_Aluminized_Pants.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 46,
+        "fields": {
+            "name": "Fire and Thermal Radation Immune Aluminized Foot Protection",
+            "clothing_type": "SHO",
+            "comfort_low": 130,
+            "comfort_high": 1000,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Fire_and_Thermal_Radation_Immune_Aluminized_Foot_Protection.jpeg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 47,
+        "fields": {
+            "name": "Tungsten Lined Air Conditioned Foot Protection",
+            "clothing_type": "SHO",
+            "comfort_low": 1000,
+            "comfort_high": 6100,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Tungsten_Lined_Air_Conditioned_Foot_Protection.jpg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 48,
+        "fields": {
+            "name": "Tungsten Lined Air Conditioned Pants",
+            "clothing_type": "PNT",
+            "comfort_low": 1000,
+            "comfort_high": 6100,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Tungsten_Lined_Air_Conditioned_Pants.jpg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 49,
+        "fields": {
+            "name": "Tungsten Lined Air Conditioned Vest",
+            "clothing_type": "SHR",
+            "comfort_low": 1000,
+            "comfort_high": 6100,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Tungsten_Lined_Air_Conditioned_Vest.jpg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 50,
+        "fields": {
+            "name": "Tungsten Lined Air Conditioned Helmet",
+            "clothing_type": "HAT",
+            "comfort_low": 1000,
+            "comfort_high": 6100,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Tungsten_Lined_Air_Conditioned_Helmet.jpg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 51,
+        "fields": {
+            "name": "Umbrella",
+            "clothing_type": "MIS",
+            "comfort_low": -460,
+            "comfort_high": 6100,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Umbrella.jpg"
+        }
+    },
+    {
+        "model": "weather_app.GenericClothes",
+        "pk": 52,
+        "fields": {
+            "name": "Waterproof Tarp",
+            "clothing_type": "MIS",
+            "comfort_low": -460,
+            "comfort_high": 6100,
+            "waterproof_rating": 100,
+            "image": "generic_clothes/Waterproof_Tarp.jpg"
+        }
+    }
+]
