@@ -15,6 +15,6 @@ class AddForm(ModelForm):
   """
   Forms for adding items to the inventory
   """
-    class Meta:
-        model = GenericClothes
-        fields = ('name', 'clothing_type', 'comfort_low', 'comfort_high', 'waterproof_rating', 'photo', 'image_url')
+  class Meta:
+    model = GenericClothes
+    fields = ('name', 'clothing_type', 'comfort_low', 'comfort_high', 'waterproof_rating', 'photo', 'image_url')
