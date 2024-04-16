@@ -17,6 +17,12 @@ from django.contrib import messages
 from .forms import *
 from typing import Any
 
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 import logging
 logger = logging.getLogger("test_logger")
 
@@ -189,7 +195,7 @@ def addItem(request):
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
 
         # Upload the image to S3
-        s3 = boto3.client('s3', aws_access_key_id='AKIAW3MEAQDEQGGIBI4A', aws_secret_access_key='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')
+        s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
         image_path = f'inventory/photos/{image_file.name}_{timestamp}'
 
         try:
