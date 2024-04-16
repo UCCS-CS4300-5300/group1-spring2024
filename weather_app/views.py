@@ -199,14 +199,14 @@ def addItem(request):
         image_path = f'inventory/photos/{image_file.name}_{timestamp}'
 
         try:
-            s3.upload_fileobj(image_file, 'uccs-ase', image_path)
+            s3.upload_fileobj(image_file, os.getenv('AWS_STORAGE_BUCKET_NAME'), image_path)
         except Exception as e:
             # Handle the exception, perhaps log it
             print(f"Error uploading image to S3: {e}")
             return render(request, 'weather_app/error.html', {'message': 'Error uploading image. Please try again.'})
 
         # Generate the image URL
-        image_url = f'https://uccs-ase.s3.amazonaws.com/{image_path}'
+        image_url = f'https://{os.getenv('AWS_STORAGE_BUCKET_NAME')}.s3.amazonaws.com/{image_path}'
 
         # Save the image URL to the form
         form.instance.image_url = image_url
