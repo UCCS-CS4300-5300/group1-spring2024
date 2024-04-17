@@ -111,8 +111,8 @@ class GenericClothesListView(View):
     
   @method_decorator(login_required(login_url='login'), name='dispatch')
   @method_decorator(allowed_users(allowed_roles=['user']))
-  def get(self, request, user_id, *args, **kwargs):
-    user = get_object_or_404(AppUser, pk=user_id)
+  def get(self, request, *args, **kwargs): # previously def get(self, request, *args, **kwargs): 
+    # user = get_object_or_404(AppUser, pk=user_id)
     
     """
     Get inventory data
@@ -189,8 +189,9 @@ class RegisterUser(View):
         user = form.save()
         username = form.cleaned_data.get('username')
         #create a new group for the user so that things can be admin access only
-        group = Group.objects.get_or_create(name='user__role')[0]
+        group = Group.objects.get_or_create(name='user')[0] # used to be user__role
         user.groups.add(group)
+
         app_user = AppUser.objects.create(username=username)
 
         messages.success(request, 'Account was created for ' + username)

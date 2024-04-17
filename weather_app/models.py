@@ -429,7 +429,7 @@ class Weather(models.Model):
 
 class AppUser(models.Model):
   username = models.CharField(max_length=30, unique=True)
-  inventory = models.ForeignKey(GenericClothes, related_name='users', on_delete=models.CASCADE)
+  # inventory = models.ForeignKey(GenericClothes, related_name='users', on_delete=models.CASCADE)
   
   def __str__(self):
     return self.name
