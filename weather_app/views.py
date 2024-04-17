@@ -16,6 +16,7 @@ from django.contrib import messages
 from .models import Weather, GenericClothes, AppUser
 from .forms import CreateUserForm, AddForm
 from .decorators import allowed_users
+from datetime import datetime
 
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
@@ -209,7 +210,7 @@ def addItem(request):
       
       if form.is_valid():
         image_file = request.FILES['photo']
-        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        timestamp = datetime.now().strftime('%Y%m%d')
 
         # Upload the image to S3
         s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
