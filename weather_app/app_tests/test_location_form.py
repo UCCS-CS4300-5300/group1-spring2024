@@ -1,15 +1,16 @@
-from django.test import TestCase, Client
-
 # To fix "app not loaded" error when running pytest
 # Pytest wasnt loading app settings correctly or something
+from django.core.wsgi import get_wsgi_application
 import os
 import sys
+from django.test import TestCase, Client
+
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 os.environ['DJANGO_SETTINGS_MODULE'] = 'django_project.settings'
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "django_project.settings")
 
-from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
 
 class TestLocationForm(TestCase):

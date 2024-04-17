@@ -21,7 +21,7 @@
 </style>
 
 
-<h1 style="text-align:center;">Inventory list</h1>
+<h1 style="text-align:center;">Wardrobe list</h1>
 
 <!-- Table used to hold the buttons that will let you add and remove items -->
 <table align="center" style="margin: 0px auto;">
@@ -54,6 +54,7 @@
     <th>Lowest Comfort Level</th>
     <th>Highest Comfort Level</th>
     <th>Waterproof Rating</th>
+    <th>Photo</th>
     <th>Delete Item</th>
   </tr>
   <!-- For loop to autopopulate added items to display -->
@@ -64,6 +65,7 @@
     <td>{{ cloth.comfort_low }}</td>
     <td>{{ cloth.comfort_high }}</td>
     <td>{{ cloth.waterproof_rating }}</td>
+    <td><img src="{{ cloth.image_url}}" style="width: 75px;height: 75px;"></td>
     <td><a class="btn btn-secondary" href="{% url 'delete_item' cloth.id %}" role="button">Delete</a></td>
   </tr>
   {% endfor %}

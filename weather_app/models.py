@@ -4,7 +4,7 @@ import requests_cache
 from django.core import validators
 from django.db import models
 from geopy.geocoders import Nominatim
-
+from django_resized import ResizedImageField
 
 # https://docs.djangoproject.com/en/5.0/howto/initial-data/#:~:text=You%20can%20load%20data%20by,and%20reloaded%20into%20the%20database to populate the list of generic clothes
 # Must be loaded manually using python manage.py loaddata fixture_generic_clothes.json
@@ -35,27 +35,57 @@ class GenericClothes(models.Model):
   comfort_low = models.IntegerField()
   comfort_high = models.IntegerField()
   waterproof_rating = models.IntegerField()  # percentage from 1-100
+  image = ResizedImageField(size=[300, 300], upload_to='generic_clothes', blank=True)
+  photo = models.ImageField(upload_to='inventory/photos/')
+  image_url = models.CharField(max_length=500, blank='True')
 
   def __str__(self):
     return self.name
+
   
   def clean(self, *args, **kwargs):
     """
-    Django’s form (and model) fields support use of utility functions and classes known as validators. A validator is a callable object or function that takes a value and returns nothing if the value is valid or raises a ValidationError if not - https://docs.djangoproject.com/en/5.0/ref/validators/
-
     Here, we ensure that the comfort low is not greater than the high
     """
-    super().clean(
-        *args, **kwargs
-    )  # see https://stackoverflow.com/questions/7366363/adding-custom-django-model-validation
+    # see https://stackoverflow.com/questions/7366363/adding-custom-django-model-validation
+    super().clean(*args, **kwargs)  
 
     if self.comfort_low >= self.comfort_high:
       raise validators.ValidationError(
           "Comfort low must be less than or equal to comfort high.")
 
+  
+  def save(self, *args, **kwargs):
+    """
+    Here, we set default images based on the clothing types. Based on 
+    https://stackoverflow.com/questions/34128251/how-to-pass-django-model-field-value-as-an-argument-to-callable-which-is-default.
+    """
+
+    if not self.pk:  # if object is new
+      image_path = "generic_clothes/default.png"
+      if self.clothing_type == "HAT":
+        image_path = "generic_clothes/default-hat.png"
+      elif self.clothing_type == "PNT":
+        image_path = "generic_clothes/default-pants.png"
+      elif self.clothing_type == "SHR":
+        image_path = "generic_clothes/default-shirt.png"
+      elif self.clothing_type == "SHO":
+        image_path = "generic_clothes/default-shoe.png"
+
+      # file_name = os.path.basename(image_path)
+      # https://gist.github.com/iambibhas/5051911
+      # path = settings.MEDIA_ROOT + image_path
+      # file = File(open(path, 'rb'))
+      # self.image.save(file_name, file, save=False)
+
+      self.image.name = image_path
+      
+      super().save(*args, **kwargs)
+
+  
   @classmethod
   def _calculate_comfort(cls, temperature, humidity, wind_speed,
-                        tolerance_offset, working_offset):
+                         tolerance_offset, working_offset):
     """
     Calculate the comfort level based on the temperature, humidity, and wind speed. Less of a comfort calculation and more of a adjusted feels-like temperature.
 
@@ -83,14 +113,14 @@ class GenericClothes(models.Model):
       return heat_index - tolerance_offset + working_offset
 
     # If the temperature is less than or equal to 75, use the wind chill
-    else:
-      # equation from https://en.wikipedia.org/wiki/Wind_chill NA wind chill index
-      wind_chill = 35.74 + 0.6215 * temperature - 35.75 * (
-          wind_speed**0.16) + 0.4275 * temperature * (wind_speed**0.16)
-      return wind_chill - tolerance_offset + working_offset
+    # equation from https://en.wikipedia.org/wiki/Wind_chill NA wind chill index
+    wind_chill = 35.74 + 0.6215 * temperature - 35.75 * (
+        wind_speed**0.16) + 0.4275 * temperature * (wind_speed**0.16)
+    return wind_chill - tolerance_offset + working_offset
 
+  
   @classmethod
-  def _get_clothes_in_temp(cls, comfort, precipitation_chance):
+  def _get_clothes_in_temp(cls, comfort):
     """
     Function that, given a comfort value, iterates through the current clothes in the database.
     Returns:
@@ -104,7 +134,7 @@ class GenericClothes(models.Model):
     # Define defaults in the case of errors
     outfit = []
     waterproof_average = 0
-    
+
     # Ensure comfort is in range
     if comfort < -460 or comfort > 6100:
       raise ValueError(
@@ -130,6 +160,7 @@ class GenericClothes(models.Model):
 
     return (outfit, waterproof_average)
 
+  
   @classmethod
   def _get_clothes_in_prec(cls, precipitation_chance, average_waterproof):
     """
@@ -143,13 +174,16 @@ class GenericClothes(models.Model):
 
     if average_waterproof > precipitation_chance:
       return []
-    elif average_waterproof <= precipitation_chance:
+    else:
       outfit = cls.objects.filter(clothing_type="MIS")
-      return [clothe.name for clothe in outfit]
+      return list(outfit)
 
+  
   # A major refactoring
   @classmethod
-  def get_outfit_recommendation(cls, temperature, humidity, wind, precipitation, tolerance_offset, working_offset):
+  def get_outfit_recommendation(cls, temperature, humidity, wind,
+                                precipitation, tolerance_offset,
+                                working_offset):
     """
     Function that combines the functionality of:
     * _get_clothes_in_prec
@@ -163,7 +197,7 @@ class GenericClothes(models.Model):
     {
       "comfort": INT,
       "waterproofness": INT,
-      "outfit": ["Strings"],
+      "outfit": [{"image": image, "name": name}],
       "precipitation_clothes": ["Strings"],
       "colors": ["Strings"] (e.g., "red")
     }
@@ -171,19 +205,22 @@ class GenericClothes(models.Model):
 
     context = {}
 
-    comfort = cls._calculate_comfort(temperature, humidity, wind, tolerance_offset, working_offset)
-    outfit, waterproofness = cls._get_clothes_in_temp(comfort, precipitation)
-    precipitation_clothes = cls._get_clothes_in_prec(precipitation, waterproofness)
+    comfort = cls._calculate_comfort(temperature, humidity, wind,
+                                     tolerance_offset, working_offset)
+    outfit, waterproofness = cls._get_clothes_in_temp(comfort)
+    precipitation_clothes = cls._get_clothes_in_prec(precipitation,
+                                                     waterproofness)
     colors = cls._get_color_palette()
-    
+
     context['comfort'] = comfort
     context['waterproofness'] = waterproofness
-    context['outfit'] = [clothes.name for clothes in outfit]
-    context['precipitation_outfit'] = precipitation_clothes
+    context['outfit'] = [{"image": clothes.image.url, "name": clothes.name} for clothes in outfit]
+    context['precipitation_outfit'] = [{"image": clothes.image.url, "name": clothes.name} for clothes in precipitation_clothes]
     context['colors'] = colors
-    
+
     return context
 
+  
   @classmethod
   def _get_color_palette(cls):
     """
@@ -197,21 +234,23 @@ class GenericClothes(models.Model):
         "summer": ["yellow", "aqua", "skyblue", "coral", "limegreen"],
         "autumn": ["orange", "red", "brown", "goldenrod", "olive"]
     }
-    
+
     try:
       year = datetime.now().year
-      
+
       # https://stackoverflow.com/questions/16139306/determine-season-given-timestamp-in-python-using-datetime
-      seasons = [('winter', (date(year,  1,  1),  date(year,  3, 20))),
-                 ('spring', (date(year,  3, 21),  date(year,  6, 20))),
-                 ('summer', (date(year,  6, 21),  date(year,  9, 22))),
-                 ('autumn', (date(year,  9, 23),  date(year, 12, 20))),
-                 ('winter', (date(year, 12, 21),  date(year, 12, 31)))]
-    
+      seasons = [('winter', (date(year, 1, 1), date(year, 3, 20))),
+                 ('spring', (date(year, 3, 21), date(year, 6, 20))),
+                 ('summer', (date(year, 6, 21), date(year, 9, 22))),
+                 ('autumn', (date(year, 9, 23), date(year, 12, 20))),
+                 ('winter', (date(year, 12, 21), date(year, 12, 31)))]
+
       today = date.today()
-      season = [season for season, (start, end) in seasons if start <= today <= end][0]
+      season = [
+          season for season, (start, end) in seasons if start <= today <= end
+      ][0]
       return colors[season]
-      
+
     except Exception as e:  # should be impossible
       print(f"Error {e}")
       return colors["winter"]
@@ -276,22 +315,21 @@ class Weather(models.Model):
     requests_cache.install_cache(
         'weather_cache', expire_after=3600)  # Cache expires after 1 hour
     base_url = f"https://api.weather.gov/points/{latitude},{longitude}"
-    location_response = requests.get(base_url)
+    location_response = requests.get(base_url, timeout=20) # added 20 seconds timeout
     location_data = location_response.json()
 
     # If we don't get an invalid location
-    if ('status' not in location_data):
-      weather_response = requests.get(
-          location_data['properties']['forecastHourly'])
+    if 'status' not in location_data:
+      weather_response = requests.get(location_data['properties']['forecastHourly'], timeout=20)
       # If the api doesn't randomly break continue
       # This occurs when a location is valid but the server just fails for some reason
-      if(weather_response.status_code == 500):
+      if weather_response.status_code == 500:
         return None
       weather_data = weather_response.json()
       return weather_data["properties"][
           "periods"]  # the actual weather forecast
-    else:
-      return None
+    
+    return None
 
   def _format_response(weather_data, location):
     """
@@ -347,7 +385,7 @@ class Weather(models.Model):
         prec["probabilityOfPrecipitation"]["value"] for prec in weather_data
     ]
     humidity = [humid["relativeHumidity"]["value"] for humid in weather_data]
-    windSpeed = [
+    wind_speed = [
         int(windSpeed["windSpeed"].split(" ")[0]) for windSpeed in weather_data
     ]
 
@@ -356,7 +394,7 @@ class Weather(models.Model):
         "temperature": temperature,
         "precipitation": precipitation,
         "humidity": humidity,
-        "wind": windSpeed,
+        "wind": wind_speed,
         "location": location
     }
 
@@ -375,7 +413,8 @@ class Weather(models.Model):
     app = Nominatim(user_agent="Weather App")
 
     location_input = "80918" if not location else location  # 80918 is UCCS main campus
-
+    result = None
+    
     # Get location raw data from the user
     location = app.geocode(location_input)
     if location:
@@ -385,11 +424,18 @@ class Weather(models.Model):
       if weather_data:
         result = Weather._format_response(weather_data, location)
         return result
-      else:
-        return None
+
     return None
 
-
+class AppUser(models.Model):
+  username = models.CharField(max_length=30, unique=True)
+  # inventory = models.ForeignKey(GenericClothes, related_name='users', on_delete=models.CASCADE)
+  
+  def __str__(self):
+    return self.name
+  def get_absolute_url(self):
+    return reverse('user-detail', args=[str(self.id)])
+    
 """ def get_location():
   app = Nominatim(user_agent="Weather App")
   location_input = input("Enter your location: ")

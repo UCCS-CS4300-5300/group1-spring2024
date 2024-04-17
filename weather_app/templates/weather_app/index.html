@@ -4,6 +4,7 @@
 
 {% block head_content %}
   <title>Weather Line Chart</title>
+  
   <!-- The way we implement the line graph -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 
@@ -18,6 +19,7 @@
 
 <!--All code goes in between the block and end content to override base template-->
 {% block content %}
+
   <div class="row">
     <h1 class="p-3" style="text-align: center;"><strong>Weather Based Fashion Extravaganza</strong></h1>
   </div>
@@ -36,19 +38,19 @@
 
   <div class="row mt-5">
     <div class="col text-center">
-      <button type="button" class="btn text-center" onclick="toggle_attribute('Temperature (°F)')" style="background-color: orange; width:100%;">Toggle Temperature</button>
+      <button type="button" class="btn btn-toggle text-center" onclick="toggle_attribute('Temperature (°F)')" style="background-color: orange; width:100%; font-">Toggle Temperature</button>
     </div>
 
     <div class="col text-center">
-      <button type="button" class="btn btn-primary text-center" onclick="toggle_attribute('Precipitation (in.)')" style="background-color: blue; width:100%;">Toggle Precipitation</button>
+      <button type="button" class="btn btn-toggle btn-primary text-center" onclick="toggle_attribute('Precipitation (in.)')" style="background-color: blue; width:100%;">Toggle Precipitation</button>
     </div>
 
     <div class="col text-center">
-      <button type="button" class="btn text-center" onclick="toggle_attribute('Humidity (%)')" style="background-color: lightblue; width:100%;">Toggle Humidity</button>
+      <button type="button" class="btn btn-toggle text-center" onclick="toggle_attribute('Humidity (%)')" style="background-color: lightblue; width:100%;">Toggle Humidity</button>
     </div>
 
     <div class="col text-center">
-      <button type="button" class="btn btn-primary text-center" onclick="toggle_attribute('Wind Speed (mph)')" style="background-color: green; width:100%;">Toggle Wind</button>
+      <button type="button" class="btn btn-toggle btn-primary text-center" onclick="toggle_attribute('Wind Speed (mph)')" style="background-color: green; width:100%;">Toggle Wind</button>
     </div>
   </div>
   <h4 style="padding-top:60px; padding-bottom:20px;"><strong>Description of the Weather Chart</strong></h4>
@@ -56,37 +58,79 @@
 
   <script>
     const temp = JSON.parse(document.getElementById('temp_forecast').textContent);
-    const precipitation = JSON.parse(document.getElementById('precipitation_forecast').textContent)
-    const humidity = JSON.parse(document.getElementById('humidity_forecast').textContent)
-    const wind = JSON.parse(document.getElementById('wind_forecast').textContent)
+    const precipitation = JSON.parse(document.getElementById('precipitation_forecast').textContent);
+    const humidity = JSON.parse(document.getElementById('humidity_forecast').textContent);
+    const wind = JSON.parse(document.getElementById('wind_forecast').textContent);
     const days = JSON.parse(document.getElementById('day_forecast').textContent);
   
     // https://www.w3schools.com/js/js_graphics_chartjs.asp
+    var canvas = document.getElementById('weatherChart');
     const ctx = document.getElementById('weatherChart').getContext('2d');
+    
+    
     this.chart = new Chart("weatherChart", {
       type: "line",
+      
       data: {
         labels: days,
+
         datasets: [{
           data: temp,
           label: 'Temperature (°F)',
-          borderColor: "orange",
-          fill: false
+          borderColor: 'orange',
+          fill: false,
+          pointHoverBackgroundColor : 'orange',
+          pointHoverRadius : 6,
+          radius : 3,
+          pointHighlightStroke: "rgba(151,187,205,1)",
+
+          showTooltips : true,
+          tooltipEvents: ["mousemove", "touchstart", "touchmove"],
+          tooltipFontSize: 30,
+          // String - Tooltip label font declaration for the scale label
+          tooltipFontFamily: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+          backgroundColor: 'rgba(255, 165, 0, 0.1)', // Initial fill color with transparency
+
         },{
           data: precipitation,
           label: 'Precipitation (in.)',
           borderColor: "blue",
-          fill: false
+          pointHoverRadius : 6,
+          pointHoverBackgroundColor : 'blue',
+          fill: false,
+          showTooltips : true,
+          tooltipEvents: ["mousemove", "touchstart", "touchmove"],
+          tooltipFontSize: 30,
+          // String - Tooltip label font declaration for the scale label
+          tooltipFontFamily: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+          backgroundColor: 'rgba(0, 0, 255, 0.1)'
         },{
           data: humidity,
           label: 'Humidity (%)',
           borderColor: "lightblue",
-          fill: false
+          pointHoverRadius : 6,
+          pointHoverBackgroundColor : 'lightblue',
+          fill: false,
+          showTooltips : true,
+          tooltipEvents: ["mousemove", "touchstart", "touchmove"],
+          tooltipFontSize: 30,
+          // String - Tooltip label font declaration for the scale label
+          tooltipFontFamily: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+          backgroundColor: 'lightblue',
+          backgroundColor: 'rgba(103, 254, 255, 0.1)'
         },{
           data: wind,
           label: 'Wind Speed (mph)',
           borderColor: "green",
-          fill: false
+          pointHoverRadius : 6,
+          pointHoverBackgroundColor : 'green',
+          fill: false,
+          showTooltips : true,
+          tooltipEvents: ["mousemove", "touchstart", "touchmove"],
+          tooltipFontSize: 30,
+          // String - Tooltip label font declaration for the scale label
+          tooltipFontFamily: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+        backgroundColor: 'rgba(0, 255, 30, 0.1)'
         }]
       },
       options: {
@@ -95,18 +139,71 @@
             scaleLabel:{
               display: true,
               labelString: 'Hours (MDT, Military)', //labels the x axis as hours
-              fontColor: 'black'
+              fontColor: 'black',
+              
             }
           }]
         }, //axes
         legend: {
           display: true,
           labels: {
-            fontColor: 'black' //legend at the top of the graph font color
+            fontColor: 'black', //legend at the top of the graph font color
           }
-        }
+        },
+        hover: {
+          onHover: function(evt, chartHover) {
+            var points = this.getElementAtEvent(evt);
+            if (points.length > 0) {
+              var datasetIndex = points[0]._datasetIndex;
+
+              // Reset fill for all datasets
+              this.data.datasets.forEach(function(dataset) {
+                dataset.fill = false;
+              });
+
+              // Set fill only for the hovered dataset
+              this.data.datasets[datasetIndex].fill = true;
+
+              this.update(); // Update the chart to apply changes
+            }
+          }
+        },
+        elements: {
+          line: {
+            tension: 0 // Disable bezier curves for straight lines
+          }
+        },
+        tooltips: {
+          titleFontFamily: 'Open Sans',
+          backgroundColor: 'rgba(0,0,0,0.9)',
+          titleFontColor: 'white',
+          caretSize: 10,
+          cornerRadius: 5,
+          xPadding: 10,
+          yPadding: 10,
+          titleFont : {weight : 'bold'},
+          titleAlign : 'center',
+          mode: 'index',
+          callbacks: {
+            title: function (tooltipItems, data) {
+              // Display the first label (usually the x-axis label) as the title
+              return "Hour " + data.labels[tooltipItems[0].index];
+            },
+            label: function (tooltipItem, data) {
+              var label = data.datasets[tooltipItem.datasetIndex].label || '';
+
+              if (label) {
+                label += ': ';
+              }
+              label += tooltipItem.yLabel
+              return label;
+            }
+          }
+        },
       }
     });
+    
+
 
     // Based on https://www.chartjs.org/docs/latest/developers/updates.html
     function toggle_attribute(label) {

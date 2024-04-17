@@ -1,10 +1,10 @@
-from os import path
-from django.test import TestCase
-from django.test.testcases import LiveServerTestCase
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-
+# from os import path
+# from django.test import TestCase
+# from django.test.testcases import LiveServerTestCase
+# from selenium import webdriver
+# from selenium.webdriver.common.by import By
+# from selenium.webdriver.chrome.options import Options
+# 
 # class SeleniumTests(LiveServerTestCase):
 #   @classmethod
 #   def setUpClass(cls):

@@ -1,8 +1,9 @@
+import datetime
+from unittest.mock import patch
 from django.test import TestCase
 from ..models import GenericClothes
-import datetime
-from unittest.mock import patch, call, Mock
 from .. import models
+from .utils import NewDate, NewDatetime
 
 class TestColorGenerationUnit(TestCase):
   """
@@ -21,20 +22,9 @@ class TestColorGenerationUnit(TestCase):
 
     This test took me 5x as long to write the actual function.
     """
-
-    class NewDate(datetime.date):
-      @classmethod
-      def today(cls):
-        return cls(2022, 7, 22)
-
-    class NewDatetime(datetime.datetime):
-      @classmethod
-      def now(cls):
-        mock_datetime = cls(2022, 7, 22, 12, 0, 0, 0)
-        return mock_datetime
     
     expected_color = ["yellow", "aqua", "skyblue", "coral", "limegreen"]
-
+    
     # https://stackoverflow.com/questions/16134281/python-mocking-a-function-from-an-imported-module
     # https://docs.python.org/3/library/unittest.mock.html#patch-object
     # https://stackoverflow.com/questions/4481954/trying-to-mock-datetime-date-today-but-not-working/25652721#25652721
@@ -57,17 +47,7 @@ class TestColorGenerationUnit(TestCase):
     This test took me 5x as long to write the actual function.
     """
 
-    class NewDate(datetime.date):
-      @classmethod
-      def today(cls):
-        return cls(2022, 10, 22)
-
-    class NewDatetime(datetime.datetime):
-      @classmethod
-      def now(cls):
-        mock_datetime = cls(2022, 10, 22, 12, 0, 0, 0)
-        return mock_datetime
-
+    NewDate.today = lambda: datetime.date(2022, 9, 30) # need to change to be in autumn
     expected_color = ["orange", "red", "brown", "goldenrod", "olive"]
 
     # https://stackoverflow.com/questions/16134281/python-mocking-a-function-from-an-imported-module
@@ -82,5 +62,6 @@ class TestColorGenerationUnit(TestCase):
 
       color = GenericClothes._get_color_palette()
       self.assertEqual(color, expected_color)
-    
+
+    NewDate.today = lambda: datetime.date(2022, 7, 22) # change back to default
   # ---------------------------------------------------------------------------------

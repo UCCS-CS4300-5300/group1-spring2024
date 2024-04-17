@@ -1,18 +1,18 @@
-from typing import Generic
 from django.test import TestCase
 from ..models import GenericClothes
 import datetime
-from django.utils.timezone import make_aware
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 from unittest.mock import patch, call
 from django.urls import reverse
 from .. import models
+from .utils import NewDate, NewDatetime
 
 class TestGenericClothesIntegration(TestCase):
   """
   Tests user story: Temperature Based Outfit Generation Per Data Set (Temp, Humidity, Precipitation, Wind) #38 and user story: Temperature Based Outfit Generation #14 at the integration level. 
   """
 
+  maxDiff=None
   fixtures = ['fixture_generic_clothes.json']
 
   def test_integration_temperature_generation_invalid_inputs(self):
@@ -109,18 +109,7 @@ class TestGenericClothesIntegration(TestCase):
 
     Also have to stub the dates since they can change the result of the tests over time.
     """
-
-    class NewDate(datetime.date):
-      @classmethod
-      def today(cls):
-        return cls(2022, 10, 22)
-
-    class NewDatetime(datetime.datetime):
-      @classmethod
-      def now(cls):
-        mock_datetime = cls(2022, 10, 22, 12, 0, 0, 0)
-        return mock_datetime
-    
+  
     # arrange
     context = {"tolerance_offset": 5, "working_offset": 10, "location": 10001, "checkbox_colors": "on"}
 
@@ -195,20 +184,26 @@ class TestGenericClothesIntegration(TestCase):
       response = self.client.get(reverse('recommendation'), context)
       context_data = response.context
 
+    expect_outfit = [
+      (
+        {"image": c0image, "name": c0name}, {"image": c24image, "name": c24name}, {"image": c48image, "name": c48name}
+      ) 
+          for c0name, c0image, c24name, c24image, c48name, c48image in zip(
+        ["Thermal Running Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"], 
+        ["/media/generic_clothes/Thermal_Running_Hat.jpeg", "/media/generic_clothes/Insulated_Long_Sleeve.jpg", "/media/generic_clothes/Fleece-Lined_Softshell_Pants.jpg", "/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"],
+        ["Lightweight Rain Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"], 
+        ["/media/generic_clothes/Lightweight_Rain_Hat.jpeg", "/media/generic_clothes/Insulated_Long_Sleeve.jpg", "/media/generic_clothes/Fleece-Lined_Softshell_Pants.jpg", "/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"],
+        ["Cotton Baseball Cap", "Breathable Long Sleeve", "Convertible Cargo Pants", "Breathable Trail Running Shoes"], 
+        ["/media/generic_clothes/Cotton_Baseball_Cap.jpeg", "/media/generic_clothes/Breathable_Long_Sleeve.jpeg", "/media/generic_clothes/Convertible_Cargo_Pants.jpeg", "/media/generic_clothes/Breathable_Trail_Running_Shoes.jpeg"],
+          )
+    ]
+
+    expect_rain_outfit = [("Umbrella"), ("Waterproof Tarp")]
+
     # assert
     self.assertEqual(response.status_code, 200)
-    self.assertEqual(context_data['outfit_current'], 
-                     ["Thermal Running Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"])
-    self.assertEqual(context_data['rain_outfit_current'], ["Umbrella", "Waterproof Tarp"])
-
-    self.assertEqual(context_data['outfit_six_hours'], 
-                     ["Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers", "Waterproof Hiking Boots"])
-    self.assertEqual(context_data['rain_outfit_six_hours'], [])
-
-    self.assertEqual(context_data['outfit_twelve_hours'], 
-                     ["Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers", "Waterproof Hiking Boots"])
-    self.assertEqual(context_data['rain_outfit_twelve_hours'], [])
-    self.assertEqual(context_data['colors_current'], ["orange", "red", "brown", "goldenrod", "olive"])
+    self.assertEqual(context_data['outfit'], expect_outfit)
+    self.assertEqual(context_data['colors_current'], ["yellow", "aqua", "skyblue", "coral", "limegreen"])
 
   
   def test_normal_get_outfit_recommendation(self):
@@ -217,17 +212,6 @@ class TestGenericClothesIntegration(TestCase):
     * More of a functional or modular test than integration.
     * Happy Test    
     """
-
-    class NewDate(datetime.date):
-      @classmethod
-      def today(cls):
-        return cls(2022, 10, 22)
-
-    class NewDatetime(datetime.datetime):
-      @classmethod
-      def now(cls):
-        mock_datetime = cls(2022, 10, 22, 12, 0, 0, 0)
-        return mock_datetime
 
     # need to patch to avoid API calls and ensure dates are repeatable
     with (
@@ -309,9 +293,9 @@ class TestGenericClothesIntegration(TestCase):
       expected_return = {
         "comfort": 46.04,
         "waterproofness": 68.75,
-        "outfit": ['Breathable Sun Hat', 'Water-Resistant Softshell', 'Water-Resistant Hiking Pants', 'Waterproof Hiking Boots'],
+        "outfit": [{"name": name, "image": url} for name, url in zip(['Breathable Sun Hat', 'Water-Resistant Softshell', 'Water-Resistant Hiking Pants', 'Waterproof Hiking Boots'], ["/media/generic_clothes/Breathable_Sun_Hat.jpeg", "/media/generic_clothes/Water-Resistant_Softshell.jpeg", "/media/generic_clothes/Water-Resistant_Hiking_Pants.jpeg","/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"])],
         "precipitation_outfit": [],
-        "colors": ["orange", "red", "brown", "goldenrod", "olive"]
+        "colors": ["yellow", "aqua", "skyblue", "coral", "limegreen"]
       }
   
       # Act
@@ -412,96 +396,95 @@ class TestGenericClothesViewUnit(TestCase):
     Tests that the view returns 200 when correct user input is provided and calls the model methods with stubbed parameters from the get_weather_forcecast function. Also ensures the model has the correct location passed into it.
     """
 
-    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather_forecast, \
-     patch('weather_app.models.GenericClothes.get_outfit_recommendation') as mock_get_outfit_recommendation:
-        mwr = {
-            'hours': [
-                18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-                12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 3, 4,
-                5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-                21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-                15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7,
-                8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
-                18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-                12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3,
-                4, 5, 6
-            ],
-            'temperature': [
-                27, 26, 25, 24, 23, 22, 21, 21, 21, 20, 20, 20, 20, 22, 27,
-                33, 36, 40, 43, 47, 48, 48, 48, 47, 41, 35, 32, 29, 26, 25,
-                24, 23, 24, 23, 23, 23, 25, 29, 33, 39, 46, 51, 54, 55, 56,
-                57, 57, 55, 51, 46, 42, 39, 37, 36, 35, 34, 34, 33, 33, 34,
-                36, 38, 41, 45, 49, 53, 55, 56, 57, 58, 57, 56, 53, 49, 45,
-                43, 41, 40, 39, 38, 37, 36, 34, 34, 35, 37, 40, 44, 48, 51,
-                53, 54, 55, 55, 55, 54, 51, 48, 45, 43, 41, 40, 39, 39, 38,
-                37, 36, 36, 37, 38, 40, 42, 45, 47, 48, 48, 47, 46, 45, 43,
-                41, 39, 37, 35, 34, 33, 32, 32, 32, 31, 30, 30, 30, 30, 31,
-                32, 33, 34, 35, 36, 36, 36, 36, 35, 34, 32, 31, 30, 29, 28,
-                28, 27, 27, 26, 25, 25
-            ],
-            'precipitation': [
-                13, 11, 10, 8, 6, 4, 3, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 13, 13, 13,
-                13, 13, 13, 17, 17, 17, 17, 17, 17, 27, 27, 27, 27, 27, 27,
-                57, 57, 57, 57, 57, 57, 73, 73, 73, 73, 73, 73, 70, 70, 70,
-                70, 70, 70, 65, 65, 65, 65, 65, 65, 52, 52, 52, 52, 52, 52,
-                37, 37, 37, 37, 37, 37, 23, 23, 23, 23, 23, 23, 23
-            ],
-            'humidity': [
-                76, 78, 81, 81, 84, 84, 88, 88, 84, 88, 84, 81, 81, 77, 63,
-                49, 42, 36, 32, 26, 25, 26, 27, 31, 39, 49, 56, 63, 68, 71,
-                74, 77, 74, 71, 68, 65, 60, 51, 43, 32, 23, 18, 16, 15, 16,
-                16, 16, 18, 22, 28, 34, 39, 42, 43, 45, 45, 45, 47, 47, 45,
-                43, 40, 37, 32, 26, 23, 21, 20, 20, 20, 21, 22, 26, 30, 36,
-                39, 42, 44, 46, 48, 50, 52, 54, 54, 52, 50, 44, 38, 31, 28,
-                26, 26, 25, 25, 24, 25, 29, 34, 40, 45, 50, 52, 54, 54, 57,
-                59, 61, 61, 59, 59, 55, 48, 41, 37, 34, 34, 35, 37, 38, 43,
-                48, 52, 59, 66, 69, 72, 75, 72, 72, 75, 75, 75, 75, 72, 69,
-                63, 58, 56, 54, 54, 54, 54, 52, 54, 56, 58, 61, 63, 69, 71,
-                68, 71, 68, 71, 74, 74
-            ],
-            'wind': [
-                10, 10, 10, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-                5, 5, 10, 10, 10, 10, 5, 5, 5, 5, 5, 5, 5, 10, 10, 10, 10,
-                10, 10, 10, 10, 5, 5, 5, 5, 10, 10, 10, 10, 10, 5, 5, 5, 5,
-                5, 5, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 15, 15, 15,
-                15, 15, 15, 15, 15, 15, 15, 15, 10, 10, 10, 10, 10, 10, 10,
-                10, 10, 10, 10, 10, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 15,
-                15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                15, 15, 15, 15, 15, 15, 15, 15, 20, 20, 20, 20, 20, 20, 15,
-                15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 10
-            ]
-        }
-
-        # Arrange
-        mock_get_weather_forecast.return_value = mwr
-        tolerance_offset = -10
-        working_offset = 10
-       
-        expected_recommendation_calls = [
-          call(mwr['temperature'][x], mwr['humidity'][x], mwr['wind'][x], mwr['precipitation'][x], tolerance_offset, working_offset) for x in range(0, 13, 6)
-        ]
-
-        expected_weather_calls = [
-          call('10001')
-        ]
-       
-        # Act
-        response = self.client.get(
-            reverse('recommendation'), {
-                "working_offset": working_offset,
-                "tolerance_offset": tolerance_offset,
-                "location": '10001'
-            })
-
-        self.assertEqual(response.status_code, 200)
-        mock_get_outfit_recommendation.assert_has_calls(expected_recommendation_calls, any_order=False)
-        mock_get_weather_forecast.assert_has_calls(expected_weather_calls, any_order=False)
+    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather_forecast, patch('weather_app.models.GenericClothes.get_outfit_recommendation') as mock_get_outfit_recommendation:
+      mwr = {
+          'hours': [
+              18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+              12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 3, 4,
+              5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+              21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+              15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7,
+              8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+              0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+              18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+              12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3,
+              4, 5, 6
+          ],
+          'temperature': [
+              27, 26, 25, 24, 23, 22, 21, 21, 21, 20, 20, 20, 20, 22, 27,
+              33, 36, 40, 43, 47, 48, 48, 48, 47, 41, 35, 32, 29, 26, 25,
+              24, 23, 24, 23, 23, 23, 25, 29, 33, 39, 46, 51, 54, 55, 56,
+              57, 57, 55, 51, 46, 42, 39, 37, 36, 35, 34, 34, 33, 33, 34,
+              36, 38, 41, 45, 49, 53, 55, 56, 57, 58, 57, 56, 53, 49, 45,
+              43, 41, 40, 39, 38, 37, 36, 34, 34, 35, 37, 40, 44, 48, 51,
+              53, 54, 55, 55, 55, 54, 51, 48, 45, 43, 41, 40, 39, 39, 38,
+              37, 36, 36, 37, 38, 40, 42, 45, 47, 48, 48, 47, 46, 45, 43,
+              41, 39, 37, 35, 34, 33, 32, 32, 32, 31, 30, 30, 30, 30, 31,
+              32, 33, 34, 35, 36, 36, 36, 36, 35, 34, 32, 31, 30, 29, 28,
+              28, 27, 27, 26, 25, 25
+          ],
+          'precipitation': [
+              13, 11, 10, 8, 6, 4, 3, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 13, 13, 13,
+              13, 13, 13, 17, 17, 17, 17, 17, 17, 27, 27, 27, 27, 27, 27,
+              57, 57, 57, 57, 57, 57, 73, 73, 73, 73, 73, 73, 70, 70, 70,
+              70, 70, 70, 65, 65, 65, 65, 65, 65, 52, 52, 52, 52, 52, 52,
+              37, 37, 37, 37, 37, 37, 23, 23, 23, 23, 23, 23, 23
+          ],
+          'humidity': [
+              76, 78, 81, 81, 84, 84, 88, 88, 84, 88, 84, 81, 81, 77, 63,
+              49, 42, 36, 32, 26, 25, 26, 27, 31, 39, 49, 56, 63, 68, 71,
+              74, 77, 74, 71, 68, 65, 60, 51, 43, 32, 23, 18, 16, 15, 16,
+              16, 16, 18, 22, 28, 34, 39, 42, 43, 45, 45, 45, 47, 47, 45,
+              43, 40, 37, 32, 26, 23, 21, 20, 20, 20, 21, 22, 26, 30, 36,
+              39, 42, 44, 46, 48, 50, 52, 54, 54, 52, 50, 44, 38, 31, 28,
+              26, 26, 25, 25, 24, 25, 29, 34, 40, 45, 50, 52, 54, 54, 57,
+              59, 61, 61, 59, 59, 55, 48, 41, 37, 34, 34, 35, 37, 38, 43,
+              48, 52, 59, 66, 69, 72, 75, 72, 72, 75, 75, 75, 75, 72, 69,
+              63, 58, 56, 54, 54, 54, 54, 52, 54, 56, 58, 61, 63, 69, 71,
+              68, 71, 68, 71, 74, 74
+          ],
+          'wind': [
+              10, 10, 10, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+              5, 5, 10, 10, 10, 10, 5, 5, 5, 5, 5, 5, 5, 10, 10, 10, 10,
+              10, 10, 10, 10, 5, 5, 5, 5, 10, 10, 10, 10, 10, 5, 5, 5, 5,
+              5, 5, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 15, 15, 15,
+              15, 15, 15, 15, 15, 15, 15, 15, 10, 10, 10, 10, 10, 10, 10,
+              10, 10, 10, 10, 10, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+              15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 15,
+              15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+              15, 15, 15, 15, 15, 15, 15, 15, 20, 20, 20, 20, 20, 20, 15,
+              15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 10
+          ]
+      }
+      
+      # Arrange
+      mock_get_weather_forecast.return_value = mwr
+      tolerance_offset = -10
+      working_offset = 10
+      
+      expected_recommendation_calls = [
+        call(mwr['temperature'][x], mwr['humidity'][x], mwr['wind'][x], mwr['precipitation'][x], tolerance_offset, working_offset) for x in range(0, 24, 48)
+      ]
+      
+      expected_weather_calls = [
+        call('10001')
+      ]
+      
+      # Act
+      response = self.client.get(
+          reverse('recommendation'), {
+              "working_offset": working_offset,
+              "tolerance_offset": tolerance_offset,
+              "location": '10001'
+          })
+      
+      self.assertEqual(response.status_code, 200)
+      mock_get_outfit_recommendation.assert_has_calls(expected_recommendation_calls, any_order=False)
+      mock_get_weather_forecast.assert_has_calls(expected_weather_calls, any_order=False)
 
   
   def test_view_get_with_invalid_params_should_throw_error(self):
@@ -537,6 +520,37 @@ class TestGenericClothesModelUnit(TestCase):
   """
 
   fixtures = ['fixture_generic_clothes.json']
+
+  # --------------------------- save ---------------------------
+
+  def test_save(self):
+    """
+    Tests that the save method properly assigns a default image.
+    """
+
+    # Arrange
+    new_clothes = GenericClothes(name="Logan's Shirt", clothing_type="SHR", comfort_low=60, comfort_high=100, waterproof_rating=60)
+
+    # Act
+    new_clothes.save()
+
+    # Assert
+    self.assertEqual(new_clothes.image, 'generic_clothes/default-shirt.png')
+
+  
+  def test_save_default(self):
+    """
+    Tests that the save method properly assigns a default image.
+    """
+
+    # Arrange
+    new_clothes = GenericClothes(name="Logan's Shirt", clothing_type="MSC", comfort_low=60, comfort_high=100, waterproof_rating=60)
+
+    # Act
+    new_clothes.save()
+
+    # Assert
+    self.assertEqual(new_clothes.image, 'generic_clothes/default.png')
   
   # --------------------------- get_outfit_recommendation ---------------------------
   
@@ -566,21 +580,26 @@ class TestGenericClothesModelUnit(TestCase):
 
       test_clothe_1 = GenericClothes(name="test_clothe_1", clothing_type = "HAT", comfort_low = 10, comfort_high = 20, waterproof_rating = 10)
       test_clothe_1.save()
-      test_outfit_1 = GenericClothes.objects.filter(id=test_clothe_1.id) # needs to be queryset, not object
+
+      test_clothe_2 = GenericClothes(name="test_clothe_2", clothing_type = "MSC", comfort_low = 10, comfort_high = 20, waterproof_rating = 100)
+      test_clothe_2.save()
       
+      test_outfit_1 = GenericClothes.objects.filter(id=test_clothe_1.id) # needs to be queryset, not object
+      test_outfit_2 = GenericClothes.objects.filter(id=test_clothe_2.id)
+
       mock_cc.return_value = 10
       mock_temp.return_value = (test_outfit_1, 100)
-      mock_prec.return_value = ['some more clothes']
+      mock_prec.return_value = test_outfit_2
       mock_color.return_value = ['some colors']
 
       mock_cc_calls = [call(temp, humidity, wind, tolerance_offset, working_offset)]
-      mock_temp_calls = [call(mock_cc.return_value, precipitation)]
+      mock_temp_calls = [call(mock_cc.return_value)]
       mock_prec_calls = [call(precipitation, mock_temp.return_value[1])]
       expected_return = {
         "comfort": mock_cc.return_value,
         "waterproofness": mock_temp.return_value[1],
-        "outfit": [test_clothe_1.name],
-        "precipitation_outfit": ['some more clothes'],
+        "outfit": [{"name": test_clothe_1.name, "image": "/media/generic_clothes/default-hat.png"}],
+        "precipitation_outfit": [{"name": test_clothe_2.name, "image": "/media/generic_clothes/default.png"}],
         "colors": ['some colors']
       }
       
@@ -607,10 +626,9 @@ class TestGenericClothesModelUnit(TestCase):
 
     # Arrange
     comfort = 11
-    precipitation_chance = 0
 
     # Act
-    outfit, water_avg = GenericClothes._get_clothes_in_temp(comfort, precipitation_chance)
+    outfit, water_avg = GenericClothes._get_clothes_in_temp(comfort)
     outfit_names = [clothes.name for clothes in outfit]
 
     # Assert
@@ -631,9 +649,8 @@ class TestGenericClothesModelUnit(TestCase):
     
     # Arrange
     comfort = 60
-    precipitation_chance = 85
   
-    outfit, water_avg = GenericClothes._get_clothes_in_temp(comfort, precipitation_chance)
+    outfit, water_avg = GenericClothes._get_clothes_in_temp(comfort)
     outfit_names = [clothes.name for clothes in outfit]
 
     self.assertEqual(len(outfit), 4)
@@ -653,9 +670,8 @@ class TestGenericClothesModelUnit(TestCase):
   
     # Arrange
     comfort = 105
-    precipitation_chance = 0
   
-    outfit, water_avg = GenericClothes._get_clothes_in_temp(comfort, precipitation_chance)
+    outfit, water_avg = GenericClothes._get_clothes_in_temp(comfort)
     outfit_names = [clothes.name for clothes in outfit]
 
     self.assertEqual(len(outfit), 4)
@@ -674,8 +690,8 @@ class TestGenericClothesModelUnit(TestCase):
     """
 
     with self.assertRaises(ValueError):
-      GenericClothes._get_clothes_in_temp(20000, 0)
-      GenericClothes._get_clothes_in_temp(-5000, 0)
+      GenericClothes._get_clothes_in_temp(20000)
+      GenericClothes._get_clothes_in_temp(-5000)
 
   # ---------------------------------------------------------------------------------
 
@@ -705,9 +721,10 @@ class TestGenericClothesModelUnit(TestCase):
 
     # Act
     outfit = GenericClothes._get_clothes_in_prec(precipitation_chance, average_waterproofing)
-
+    outfit_names = [clothes.name for clothes in outfit]
+    
     # Assert
-    self.assertEqual(outfit, ["Umbrella", "Waterproof Tarp"])
+    self.assertEqual(outfit_names, ["Umbrella", "Waterproof Tarp"])
 
   def test_get_clothes_in_prec_middle(self):
     """
@@ -720,9 +737,10 @@ class TestGenericClothesModelUnit(TestCase):
 
     # Act
     outfit = GenericClothes._get_clothes_in_prec(precipitation_chance, average_waterproofing)
-
+    outfit_names = [a.name for a in outfit]
+    
     # Assert
-    self.assertEqual(outfit, ["Umbrella", "Waterproof Tarp"])
+    self.assertEqual(outfit_names, ["Umbrella", "Waterproof Tarp"])
 
   def test_get_clothes_in_prec_dry(self):
     """

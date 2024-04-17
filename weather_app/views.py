@@ -1,19 +1,31 @@
-from django.shortcuts import redirect, render
-from django.http import JsonResponse, HttpResponse
-from django.views import View, generic
-from django.contrib import messages
-from .models import Weather, GenericClothes
-from datetime import datetime
+import logging
+from itertools import zip_longest
 from rest_framework import status
+import boto3
 
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect, render, get_object_or_404
+from django.views import View
+from django.contrib import messages
 from django.contrib.auth.models import Group
 from django.contrib import messages
-from .forms import *
-from typing import Any
+from .models import Weather, GenericClothes, AppUser
+from .forms import CreateUserForm, AddForm
+from .decorators import allowed_users
+
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 import logging
 logger = logging.getLogger("test_logger")
@@ -34,66 +46,77 @@ class TemperatureView(View):
     color_selected = request.GET.get('checkbox_colors')
 
     context = {}
-    
+
     # User inputted the form
     if tolerance_offset and working_offset:
       try:
-        
+
         tolerance_offset = int(tolerance_offset)
         working_offset = int(working_offset)
         
         weather_data = Weather.get_weather_forecast(location)
 
+        if not weather_data:
+          return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/recommendation.html', context={'error': 'Please enter a valid location'})
+
+        
         # All of this is formatting the weather data to be calculated in the comfort, which then gets the outfits, which then is rendered.
         # Really no business logic is here, except getting the data in the proper form.
-      
+
         current_weather_data = [
           int(weather_data[x][0]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
         ]
 
-        six_hours_weather_data = [
-          int(weather_data[x][6]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
+        next_weather_data = [
+          int(weather_data[x][24]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
         ]
 
-        twelve_hours_weather_data = [
-          int(weather_data[x][12]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
+        final_hours_weather_data = [
+          int(weather_data[x][48]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
         ]
 
         current = GenericClothes.get_outfit_recommendation(*current_weather_data, tolerance_offset, working_offset)
-        six_hours = GenericClothes.get_outfit_recommendation(*six_hours_weather_data, tolerance_offset, working_offset)
-        twelve_hours = GenericClothes.get_outfit_recommendation(*twelve_hours_weather_data, tolerance_offset, working_offset)
+        next = GenericClothes.get_outfit_recommendation(*next_weather_data, tolerance_offset, working_offset)
+        final = GenericClothes.get_outfit_recommendation(*final_hours_weather_data, tolerance_offset, working_offset)
 
         context["waterproofing_current"] = current['waterproofness']
-        context["waterproofing_six_hours"] = six_hours['waterproofness']
-        context["waterproofing_twelve_hours"] = twelve_hours['waterproofness']
-
-        context["rain_outfit_current"] = current['precipitation_outfit']
-        context["rain_outfit_six_hours"] = six_hours['precipitation_outfit']
-        context["rain_outfit_twelve_hours"] = twelve_hours['precipitation_outfit']
+        context["waterproofing_six_hours"] = next['waterproofness']
+        context["waterproofing_twelve_hours"] = final['waterproofness']
 
         context["comfort_current"] = round(current['comfort'], 2)
-        context["comfort_six_hours"] = round(six_hours['comfort'], 2)
-        context["comfort_twelve_hours"] = round(twelve_hours['comfort'], 2)
+        context["comfort_six_hours"] = round(next['comfort'], 2)
+        context["comfort_twelve_hours"] = round(final['comfort'], 2)
 
-        context["outfit_current"] = current['outfit']
-        context["outfit_six_hours"] = six_hours['outfit']
-        context["outfit_twelve_hours"] = twelve_hours['outfit']
+        context["outfit"] = [(c0a, c6a, c12a) for c0a, c6a, c12a in zip(current['outfit'], next['outfit'], final['outfit'])]
+
+        context["rain_outfit"] = [(c0a, c6a, c12a) for c0a, c6a, c12a in zip_longest(current['precipitation_outfit'], next['precipitation_outfit'], final['precipitation_outfit'], fillvalue="Missing...")]
 
         if color_selected:
           context["colors_current"] = current['colors']
-              
+
       except Exception as e:
         context["error"] = f"Error, please try again. Error message: {e}"
-    
+
     return render(request, 'weather_app/recommendation.html', context)
-  
+
+
 class GenericClothesListView(View):
+  """
+  Class to manage the inventory view for the GenericClothes model
+  """
   model = GenericClothes
 
   def transform_field_name(self, field_name):
     return field_name.capitalize().replace("_", " ")
-  
-  def get(self, request, *args, **kwargs):
+    
+  @method_decorator(login_required(login_url='login'), name='dispatch')
+  @method_decorator(allowed_users(allowed_roles=['user']))
+  def get(self, request, *args, **kwargs): # previously def get(self, request, *args, **kwargs): 
+    # user = get_object_or_404(AppUser, pk=user_id)
+    
+    """
+    Get inventory data
+    """
     #DATA FOR TESTING
     # test_cloth = self.model(name="nade", clothing_type="SHO", comfort_low=10, comfort_high=20, waterproof_rating=400)
     # test_cloth.save()
@@ -101,7 +124,7 @@ class GenericClothesListView(View):
     # Get field model names for the context so frontend knows what options we can query clothing by
     context = {}
     field_name = request.GET.get('filterBy')
-    if(field_name == None):
+    if field_name == None:
       field_name = "name" # If no filter is provided sort by name by default
     logger.debug(field_name)
     fields = self.model._meta.get_fields()
@@ -133,7 +156,7 @@ class WeatherView(View):
     # get weather data
     weather_data = Weather.get_weather_forecast(location)
 
-    if(weather_data):
+    if weather_data:
       # template is expecting dictionary with following values
       context = {
           'temp_forecast': weather_data['temperature'],
@@ -143,7 +166,7 @@ class WeatherView(View):
           'day_forecast': weather_data['hours'][:24],
           'location' : weather_data['location'],
       }
-  
+
       return render(request, 'weather_app/index.html', context)
     else:
       return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/index.html', context={'error_message': 'Please enter a valid location'})
@@ -166,8 +189,10 @@ class RegisterUser(View):
         user = form.save()
         username = form.cleaned_data.get('username')
         #create a new group for the user so that things can be admin access only
-        group = Group.objects.get_or_create(name='user__role')[0]
-        user.groups.add(group) 
+        group = Group.objects.get_or_create(name='user')[0] # used to be user__role
+        user.groups.add(group)
+
+        app_user = AppUser.objects.create(username=username)
 
         messages.success(request, 'Account was created for ' + username)
         return redirect('login') #after successful registration, redirect to login page
@@ -180,9 +205,29 @@ def addItem(request):
 
     if request.method == 'POST':
 
-      form = AddForm(request.POST)
-
+      form = AddForm(request.POST,  request.FILES)
+      
       if form.is_valid():
+        image_file = request.FILES['photo']
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+
+        # Upload the image to S3
+        s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+        image_path = f'inventory/photos/{image_file.name}_{timestamp}'
+
+        try:
+            s3.upload_fileobj(image_file, os.getenv('AWS_STORAGE_BUCKET_NAME'), image_path)
+        except Exception as e:
+            # Handle the exception, perhaps log it
+            print(f"Error uploading image to S3: {e}")
+            return render(request, 'weather_app/error.html', {'message': 'Error uploading image. Please try again.'})
+
+        # Generate the image URL
+        image_url = f"https://{os.getenv('AWS_STORAGE_BUCKET_NAME')}.s3.amazonaws.com/{image_path}"
+
+        # Save the image URL to the form
+        form.instance.image_url = image_url
+        form.instance.photo = None
         post = form.save(commit=False)
         post.save()
 
@@ -198,7 +243,7 @@ def deleteItem(request, id):
   if request.method == 'POST':
     post.delete()
     return redirect('inventory')
-  
+
   context = {'item': post}
   return render(request, 'weather_app/delete_item.html', context)
 
