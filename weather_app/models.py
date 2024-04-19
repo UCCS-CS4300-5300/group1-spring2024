@@ -5,6 +5,7 @@ from django.core import validators
 from django.db import models
 from geopy.geocoders import Nominatim
 from django_resized import ResizedImageField
+from utils import calculate_heat_index, calculate_windchill
 
 # https://docs.djangoproject.com/en/5.0/howto/initial-data/#:~:text=You%20can%20load%20data%20by,and%20reloaded%20into%20the%20database to populate the list of generic clothes
 # Must be loaded manually using python manage.py loaddata fixture_generic_clothes.json
@@ -97,27 +98,16 @@ class GenericClothes(models.Model):
     Returns the adjusted feels-like temperature in farenheit.
     """
 
-    if humidity < 0:
-      raise ValueError("Humidity must be greater than or equal to 0.")
-
-    if wind_speed < 0:
-      raise ValueError("Wind speed must be greater than or equal to 0.")
-
     if working_offset < 0:
       raise ValueError("Working offset must be greater than or equal to 0.")
 
-    # Calculate the adjusted feels-like temperature
+    # Calculate the adjusted 'feels-like' temperature
     if temperature > 75:
-      # equation from https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
-      heat_index = -42.379 + 2.04901523 * temperature + 10.14333127 * humidity - 0.22475541 * temperature * humidity - 0.00683783 * temperature * temperature - 0.05481717 * humidity * humidity + 0.00122874 * temperature * temperature * humidity + 0.00085282 * temperature * humidity * humidity - 0.00000199 * temperature * temperature * humidity * humidity
+      heat_index = calculate_heat_index(temperature, humidity)
       return heat_index - tolerance_offset + working_offset
 
-    # If the temperature is less than or equal to 75, use the wind chill
-    # equation from https://en.wikipedia.org/wiki/Wind_chill NA wind chill index
-    wind_chill = 35.74 + 0.6215 * temperature - 35.75 * (
-        wind_speed**0.16) + 0.4275 * temperature * (wind_speed**0.16)
+    wind_chill = calculate_windchill(temperature, wind_speed)
     return wind_chill - tolerance_offset + working_offset
-
   
   @classmethod
   def _get_clothes_in_temp(cls, comfort):
@@ -174,9 +164,9 @@ class GenericClothes(models.Model):
 
     if average_waterproof > precipitation_chance:
       return []
-    else:
-      outfit = cls.objects.filter(clothing_type="MIS")
-      return list(outfit)
+
+    outfit = cls.objects.filter(clothing_type="MIS")
+    return list(outfit)
 
   
   # A major refactoring
