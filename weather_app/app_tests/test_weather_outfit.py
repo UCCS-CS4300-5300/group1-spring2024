@@ -1,9 +1,8 @@
 from django.test import TestCase
-from ..models import GenericClothes
-import datetime
 from django.core.exceptions import ValidationError
 from unittest.mock import patch, call
 from django.urls import reverse
+from ..models import GenericClothes
 from .. import models
 from .utils import NewDate, NewDatetime
 
