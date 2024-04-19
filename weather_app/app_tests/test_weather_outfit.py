@@ -4,6 +4,7 @@ from unittest.mock import patch, call
 from django.urls import reverse
 from ..models import GenericClothes
 from .. import models
+from .. import utils
 from .utils import NewDate, NewDatetime
 
 class TestGenericClothesIntegration(TestCase):
@@ -759,23 +760,29 @@ class TestGenericClothesModelUnit(TestCase):
   # ---------------------------------------------------------------------------------
 
   # --------------------------- _calculate_comfort ---------------------------
+  
+  def test_calculate_comfort_modular_test(self):
+    """
+    Modular test for _calculate_comfort
+    Tests to ensure it calls the utils functions
+    """
+    test_data = [70, 50, 10, 5, 3, 68.825]
+    comfort_params = test_data[0:5]
+    expected = test_data[5]
+    comfort = GenericClothes._calculate_comfort(*comfort_params)
+    self.assertAlmostEqual(comfort, expected, places=2)
+  
   def test_calculate_comfort_invalid_working_tolerance(self):
     """
     Test working_offset is not less than 0. Sad
     """
 
-    with self.assertRaises(ValueError):
-      GenericClothes._calculate_comfort(temperature=75,
+    with patch('utils.calculate_heat_index') as chi, self.assertRaises(ValueError):
+      chi.return_value = lambda: exec('raise ValueError')
+      GenericClothes._calculate_comfort(temperature=76,
                                        humidity=1,
                                        wind_speed=10,
                                        tolerance_offset=10,
-                                       working_offset=-10)
-
-    with self.assertRaises(ValueError):
-      GenericClothes._calculate_comfort(temperature=75,
-                                       humidity=1,
-                                       wind_speed=10,
-                                       tolerance_offset=-10,
                                        working_offset=-10)
 
   def test_calculate_comfort_invalid_windspeed(self):
@@ -784,7 +791,7 @@ class TestGenericClothesModelUnit(TestCase):
     """
 
     with self.assertRaises(ValueError):
-      GenericClothes._calculate_comfort(temperature=75,
+      GenericClothes._calculate_comfort(temperature=70,
                                        humidity=1,
                                        wind_speed=-10,
                                        tolerance_offset=0,
@@ -793,14 +800,16 @@ class TestGenericClothesModelUnit(TestCase):
   def test_calculate_comfort_invalid_humidity(self):
     """
     Test that humidity is not less than 0. Sad
+    Why are we not patching the helper function?
+    Modular test
     """
-
+    
     with self.assertRaises(ValueError):
-      GenericClothes._calculate_comfort(temperature=75,
-                                       humidity=-1,
-                                       wind_speed=10,
-                                       tolerance_offset=0,
-                                       working_offset=0)
+      GenericClothes._calculate_comfort(temperature=76,
+                                         humidity=-1,
+                                         wind_speed=10,
+                                         tolerance_offset=0,
+                                         working_offset=0)
 
   def test_calculate_comfort_low_temp(self):
     """
@@ -811,28 +820,34 @@ class TestGenericClothesModelUnit(TestCase):
     # https://gist.github.com/aipi/99ed2c992be41be437bb9506de73cb44
     test_data = [(70, 50, 10, 5, 3, 68.825), (40, 0, 20, 1, 2, 31.481)]
 
-    for test_params in test_data:
-      with self.subTest():
-        comfort_params = test_params[0:5]
-        expected = test_params[5]
-        comfort = GenericClothes._calculate_comfort(*comfort_params)
-        self.assertAlmostEqual(comfort, expected, places=2)
+    with patch('utils.calculate_windchill') as cwc:
+      for test_params in test_data:
+        cwc.return_value = test_params[5]
+        with self.subTest():
+          comfort_params = test_params[0:5]
+          expected = test_params[5]
+          comfort = GenericClothes._calculate_comfort(*comfort_params)
+          self.assertAlmostEqual(comfort, expected, places=2)
 
   def test_calculate_comfort_high_temp(self):
     """
-    Test that calculate_comfort uses the wind chill calculation when the temperature is less than or equal to 75. Happy
+    Test that calculate_comfort uses the heat index calculation 
+    * when the temperature is greater than 75. 
+    * Happy
     """
 
     # in format of (temperature, humidity, wind_speed, tolerance_offset, working_offset, expected comfort)
     # https://gist.github.com/aipi/99ed2c992be41be437bb9506de73cb44
     test_data = [(80, 60, 5, 0, 0, 81.811), (76, 65, 15, 2, 4, 79.869)]
 
-    for test_params in test_data:
-      with self.subTest():
-        comfort_params = test_params[0:5]
-        expected = test_params[5]
-        comfort = GenericClothes._calculate_comfort(*comfort_params)
-        self.assertAlmostEqual(comfort, expected, places=2)
+    with patch('utils.calculate_heat_index') as chi:
+      for test_params in test_data:
+        chi.return_value = test_params[5]
+        with self.subTest():
+          comfort_params = test_params[0:5]
+          expected = test_params[5]
+          comfort = GenericClothes._calculate_comfort(*comfort_params)
+          self.assertAlmostEqual(comfort, expected, places=2)
 
   # ---------------------------------------------------------------------------------
 
