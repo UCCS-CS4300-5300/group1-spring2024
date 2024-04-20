@@ -751,7 +751,7 @@ class TestGenericClothesModelUnit(TestCase):
     """
 
     # Arrange
-    new_clothes = GenericClothes(name="Logan's Shirt", clothing_type="MSC", comfort_low=60, comfort_high=100, waterproof_rating=60)
+    new_clothes = GenericClothes(name="Logan's Shirt", clothing_type="MIS", comfort_low=60, comfort_high=100, waterproof_rating=60)
 
     # Act
     new_clothes.save()
@@ -788,7 +788,7 @@ class TestGenericClothesModelUnit(TestCase):
       test_clothe_1 = GenericClothes(name="test_clothe_1", clothing_type = "HAT", comfort_low = 10, comfort_high = 20, waterproof_rating = 10)
       test_clothe_1.save()
 
-      test_clothe_2 = GenericClothes(name="test_clothe_2", clothing_type = "MSC", comfort_low = 10, comfort_high = 20, waterproof_rating = 100)
+      test_clothe_2 = GenericClothes(name="test_clothe_2", clothing_type = "MIS", comfort_low = 10, comfort_high = 20, waterproof_rating = 100)
       test_clothe_2.save()
       
       test_outfit_1 = GenericClothes.objects.filter(id=test_clothe_1.id) # needs to be queryset, not object
