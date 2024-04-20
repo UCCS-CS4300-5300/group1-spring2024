@@ -2,10 +2,11 @@
 Tests for the Weather model, View, and API calls.
 """
 
-from unittest.mock import patch, call, PropertyMock
+from unittest.mock import patch, call
 from django.test import TestCase
+from django.urls import reverse
 from requests import ConnectTimeout, Response
-from geopy.location import Location
+import json
 from ..models import Weather
 from ..views import WeatherView
 from .. import models
@@ -421,7 +422,7 @@ class TestWeatherViewUnitTest(TestCase):
   """
   Tests epics Weather #31 for the WeatherView class
   """
-
+  
   def test_get(self):
     """
     Tests function get(self, request).
@@ -429,14 +430,72 @@ class TestWeatherViewUnitTest(TestCase):
     and returns its formatted output
     * Happy Test
     """
+  
+    context = {
+      "location": "Nueva York"
+    }
 
-    pass
+    mock_weather_data = {
+      "temperature": 10,
+      "precipitation": 11,
+      "humidity": 12,
+      "wind": 13,
+      "hours": [1,2,3],
+      "location": "Nueva York"
+    }
+
+    expected_response = {
+      'temp_forecast': mock_weather_data['temperature'],
+      'precipitation_forecast': mock_weather_data['precipitation'],
+      'humidity_forecast': mock_weather_data['humidity'],
+      'wind_forecast': mock_weather_data['wind'],
+      'day_forecast': mock_weather_data['hours'][:24],
+      'location' : mock_weather_data['location']
+    }
+
+    expected_get_weather_forecast_calls = [
+      call("Nueva York")
+    ]
+
+    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather_forecast:
+      mock_get_weather_forecast.return_value = mock_weather_data
+
+      response = self.client.get(reverse('home'), context)
+      response_context = response.context
+      mock_get_weather_forecast.assert_has_calls(expected_get_weather_forecast_calls)
+
+
+    self.assertEqual(response.status_code, 200)
+    self.assertEqual(expected_response['temp_forecast'], response_context['temp_forecast'])
+    self.assertEqual(expected_response['precipitation_forecast'], response_context['precipitation_forecast'])
+    self.assertEqual(expected_response['humidity_forecast'], response_context['humidity_forecast'])
+    self.assertEqual(expected_response['wind_forecast'], response_context['wind_forecast'])
+    self.assertEqual(expected_response['day_forecast'], response_context['day_forecast'])
+    self.assertEqual(expected_response['location'], response_context['location'])
 
   def test_get_invalid_location(self):
     """
     Tests function get(self, request).
-    * Tests that get returns an error when an invalid location is entered
+    * Tests that get returns an error when weather data is not returned
     * Sad Test
     """
   
-    pass
+  
+    mock_weather_data = None
+    context = {"location": "Nueva York"}
+    expected_response = {'error_message': 'Please enter a valid location'}
+  
+    expected_get_weather_forecast_calls = [
+      call("Nueva York")
+    ]
+  
+    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather_forecast:
+      mock_get_weather_forecast.return_value = mock_weather_data
+  
+      response = self.client.get(reverse('home'), context)
+      response_context = response.context
+      mock_get_weather_forecast.assert_has_calls(expected_get_weather_forecast_calls)
+  
+  
+    self.assertEqual(response.status_code, 206)
+    self.assertEqual(expected_response['error_message'], response_context['error_message'])
