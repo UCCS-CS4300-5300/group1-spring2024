@@ -75,3 +75,35 @@ class TestUtilsUnit(TestCase):
 
     with self.assertRaises(ValueError):
       utils.calculate_windchill(temperature, wind_speed)
+
+  def test_get_xth_hour_weather(self):
+    """
+    Tests function get_xth_hour_weather(hour, weather_data)
+    """
+
+    weather_data = {
+      "temperature": [80, 81, 82, 83, 84],
+      "humidity": [60, 61, 62, 63, 64],
+      "wind": [10, 11, 12, 13, 14], 
+      "precipitation": [1, 2, 3, 4, 5]
+    }
+
+    results = utils.get_xth_hour_weather(2, weather_data)
+
+    self.assertEqual(results, [82, 62, 12, 3])
+
+  def test_get_xth_hour_weather_invalid_inputs(self):
+    """
+    Tests function get_xth_hour_weather(hour, weather_data)
+    """
+  
+    weather_data = {
+      "temperature": [80, 81, 82, 83, 84],
+      "humidity": [60, 61, 62, 63, 64],
+      "wind": [10, 11, 12, 13, 14], 
+      "precipitation": [1, 2, 3, 4, 5]
+    }
+
+    with self.assertRaises(ValueError):
+      results = utils.get_xth_hour_weather(20, weather_data)
+  

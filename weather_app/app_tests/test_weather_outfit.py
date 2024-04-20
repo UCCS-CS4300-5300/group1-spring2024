@@ -497,7 +497,11 @@ class TestGenericClothesViewUnit(TestCase):
     Tests that the view returns the colors when the setting is chosen
     """
 
-    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather:
+    with (
+      patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather,
+      patch('weather_app.views.get_xth_hour_weather') as mock_get_xth_hour_weather,
+    ):
+      mock_get_xth_hour_weather.return_value = [1, 2, 3, 4]
       response = self.client.get(reverse('recommendation'), {"working_offset": "0", "tolerance_offset": "0", "checkbox_colors": "on"})
 
       context_data = response.context
@@ -534,7 +538,7 @@ class TestGenericClothesViewUnit(TestCase):
 
     with patch('weather_app.models.GenericClothes._calculate_comfort'
                ) as mock_calculate_comfort:
-      with patch('weather_app.models.GenericClothes.get_outfit_recommendation'
+      with patch('weather_app.views.GenericClothes.get_outfit_recommendation'
                  ) as mock_get_clothes_in_range:
         response = self.client.get(reverse('recommendation'), {})
 
@@ -547,7 +551,7 @@ class TestGenericClothesViewUnit(TestCase):
     Tests that the view returns 200 when correct user input is provided and calls the model methods with stubbed parameters from the get_weather_forcecast function. Also ensures the model has the correct location passed into it.
     """
 
-    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather_forecast, patch('weather_app.models.GenericClothes.get_outfit_recommendation') as mock_get_outfit_recommendation:
+    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather_forecast, patch('weather_app.views.GenericClothes.get_outfit_recommendation') as mock_get_outfit_recommendation:
       mwr = {
           'hours': [
               18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,

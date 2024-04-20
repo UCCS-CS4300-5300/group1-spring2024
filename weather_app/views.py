@@ -1,10 +1,10 @@
+import os
+import boto3
 import logging
+from datetime import datetime
 from itertools import zip_longest
 from rest_framework import status
-import boto3
-
-from django.conf import settings
-from django.contrib.auth import authenticate, login, logout
+from dotenv import load_dotenv
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -13,19 +13,14 @@ from django.views import View
 from django.contrib import messages
 from django.contrib.auth.models import Group
 from django.contrib import messages
-from .models import Weather, GenericClothes, AppUser
-from .forms import CreateUserForm, AddForm
-from .decorators import allowed_users
-from datetime import datetime
-
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-
-import os
-from dotenv import load_dotenv
-
 from django.http import JsonResponse
+from .models import Weather, GenericClothes, AppUser
+from .forms import CreateUserForm, AddForm
+from .decorators import allowed_users
+from .utils import get_xth_hour_weather
 
 # Load environment variables from .env file
 load_dotenv()
@@ -83,27 +78,28 @@ class TemperatureView(View):
         weather_data = Weather.get_weather_forecast(location)
 
         if not weather_data:
-          return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/recommendation.html', context={'error': 'Please enter a valid location'})
-
-        
-        # All of this is formatting the weather data to be calculated in the comfort, which then gets the outfits, which then is rendered.
+          return render(
+            request, 
+            status=status.HTTP_400_BAD_REQUEST, 
+            template_name='weather_app/recommendation.html',
+            context={'error': 'Please enter a valid location'}
+          )
+          
+        # All of this is formatting the weather data to be calculated in the comfort, 
+        # which then gets the outfits, which then is rendered.
         # Really no business logic is here, except getting the data in the proper form.
-
-        current_weather_data = [
-          int(weather_data[x][0]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
-        ]
-
-        next_weather_data = [
-          int(weather_data[x][24]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
-        ]
-
-        final_hours_weather_data = [
-          int(weather_data[x][48]) for x in ['temperature', 'humidity', 'wind', 'precipitation']
-        ]
-
-        current = GenericClothes.get_outfit_recommendation(*current_weather_data, tolerance_offset, working_offset)
-        next = GenericClothes.get_outfit_recommendation(*next_weather_data, tolerance_offset, working_offset)
-        final = GenericClothes.get_outfit_recommendation(*final_hours_weather_data, tolerance_offset, working_offset)
+        
+        current = GenericClothes.get_outfit_recommendation(*get_xth_hour_weather(0, weather_data), 
+                                                           tolerance_offset, 
+                                                           working_offset)
+        
+        next = GenericClothes.get_outfit_recommendation(*get_xth_hour_weather(24, weather_data), 
+                                                        tolerance_offset, 
+                                                        working_offset)
+        
+        final = GenericClothes.get_outfit_recommendation(*get_xth_hour_weather(48, weather_data), 
+                                                         tolerance_offset, 
+                                                         working_offset)
 
         context["waterproofing_current"] = current['waterproofness']
         context["waterproofing_six_hours"] = next['waterproofness']
@@ -113,9 +109,16 @@ class TemperatureView(View):
         context["comfort_six_hours"] = round(next['comfort'], 2)
         context["comfort_twelve_hours"] = round(final['comfort'], 2)
 
-        context["outfit"] = [(c0a, c6a, c12a) for c0a, c6a, c12a in zip(current['outfit'], next['outfit'], final['outfit'])]
+        context["outfit"] = list(zip(current['outfit'], next['outfit'], final['outfit']))
 
-        context["rain_outfit"] = [(c0a, c6a, c12a) for c0a, c6a, c12a in zip_longest(current['precipitation_outfit'], next['precipitation_outfit'], final['precipitation_outfit'], fillvalue="Missing...")]
+        context["rain_outfit"] = list(
+          zip_longest(
+            current['precipitation_outfit'], 
+            next['precipitation_outfit'], 
+            final['precipitation_outfit'], 
+            fillvalue="Missing..."
+          )
+        )
 
         if color_selected:
           context["colors_current"] = current['colors']

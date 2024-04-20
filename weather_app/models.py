@@ -63,25 +63,16 @@ class GenericClothes(models.Model):
     https://stackoverflow.com/questions/34128251/how-to-pass-django-model-field-value-as-an-argument-to-callable-which-is-default.
     """
 
+    default_clothe_image = {
+      "HAT": "generic_clothes/default-hat.png",
+      "PNT": "generic_clothes/default-pants.png",
+      "SHR": "generic_clothes/default-shirt.png",
+      "SHO": "generic_clothes/default-shoe.png",
+      "MIS": "generic_clothes/default.png"
+    }
+    
     if not self.pk:  # if object is new
-      image_path = "generic_clothes/default.png"
-      if self.clothing_type == "HAT":
-        image_path = "generic_clothes/default-hat.png"
-      elif self.clothing_type == "PNT":
-        image_path = "generic_clothes/default-pants.png"
-      elif self.clothing_type == "SHR":
-        image_path = "generic_clothes/default-shirt.png"
-      elif self.clothing_type == "SHO":
-        image_path = "generic_clothes/default-shoe.png"
-
-      # file_name = os.path.basename(image_path)
-      # https://gist.github.com/iambibhas/5051911
-      # path = settings.MEDIA_ROOT + image_path
-      # file = File(open(path, 'rb'))
-      # self.image.save(file_name, file, save=False)
-
-      self.image.name = image_path
-      
+      self.image.name = default_clothe_image[str(self.clothing_type)]
       super().save(*args, **kwargs)
 
   
