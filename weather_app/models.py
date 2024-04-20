@@ -127,7 +127,6 @@ class GenericClothes(models.Model):
     if comfort < -460 or comfort > 6100:
       raise ValueError("Comfort must be in range -460 (absolute zero) and 6100 (melting point of tungsten).")
 
-
     if type not in ["HAT", "SHR", "PNT", "SHO", "MIS"]:
       raise ValueError("Type must be one of the following: HAT, SHR, PNT, SHO, MIS.")
 

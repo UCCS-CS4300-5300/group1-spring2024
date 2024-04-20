@@ -1,7 +1,8 @@
 from django.test import TestCase
 from django.core.exceptions import ValidationError
-from unittest.mock import patch, call
 from django.urls import reverse
+from unittest.mock import patch, call
+import random
 from ..models import GenericClothes
 from .. import models
 from .. import utils
@@ -189,12 +190,12 @@ class TestGenericClothesIntegration(TestCase):
         {"image": c0image, "name": c0name}, {"image": c24image, "name": c24name}, {"image": c48image, "name": c48name}
       ) 
           for c0name, c0image, c24name, c24image, c48name, c48image in zip(
-        ["Thermal Running Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"], 
-        ["/media/generic_clothes/Thermal_Running_Hat.jpeg", "/media/generic_clothes/Insulated_Long_Sleeve.jpg", "/media/generic_clothes/Fleece-Lined_Softshell_Pants.jpg", "/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"],
         ["Lightweight Rain Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"], 
         ["/media/generic_clothes/Lightweight_Rain_Hat.jpeg", "/media/generic_clothes/Insulated_Long_Sleeve.jpg", "/media/generic_clothes/Fleece-Lined_Softshell_Pants.jpg", "/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"],
-        ["Cotton Baseball Cap", "Breathable Long Sleeve", "Convertible Cargo Pants", "Breathable Trail Running Shoes"], 
-        ["/media/generic_clothes/Cotton_Baseball_Cap.jpeg", "/media/generic_clothes/Breathable_Long_Sleeve.jpeg", "/media/generic_clothes/Convertible_Cargo_Pants.jpeg", "/media/generic_clothes/Breathable_Trail_Running_Shoes.jpeg"],
+        ["Lightweight Rain Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"], 
+        ["/media/generic_clothes/Lightweight_Rain_Hat.jpeg", "/media/generic_clothes/Insulated_Long_Sleeve.jpg", "/media/generic_clothes/Fleece-Lined_Softshell_Pants.jpg", "/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"],
+        ["Breathable Sun Hat", "Breathable Long Sleeve", "Convertible Cargo Pants", "Breathable Trail Running Shoes"], 
+        ["/media/generic_clothes/Breathable_Sun_Hat.jpeg", "/media/generic_clothes/Breathable_Long_Sleeve.jpeg", "/media/generic_clothes/Convertible_Cargo_Pants.jpeg", "/media/generic_clothes/Breathable_Trail_Running_Shoes.jpeg"],
           )
     ]
 
@@ -292,8 +293,8 @@ class TestGenericClothesIntegration(TestCase):
   
       expected_return = {
         "comfort": 46.04,
-        "waterproofness": 68.75,
-        "outfit": [{"name": name, "image": url} for name, url in zip(['Breathable Sun Hat', 'Water-Resistant Softshell', 'Water-Resistant Hiking Pants', 'Waterproof Hiking Boots'], ["/media/generic_clothes/Breathable_Sun_Hat.jpeg", "/media/generic_clothes/Water-Resistant_Softshell.jpeg", "/media/generic_clothes/Water-Resistant_Hiking_Pants.jpeg","/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"])],
+        "waterproofness": 88.75,
+        "outfit": [{"name": name, "image": url} for name, url in zip(['Lightweight Rain Hat', 'Water-Resistant Softshell', 'Water-Resistant Hiking Pants', 'Waterproof Hiking Boots'], ["/media/generic_clothes/Lightweight_Rain_Hat.jpeg", "/media/generic_clothes/Water-Resistant_Softshell.jpeg", "/media/generic_clothes/Water-Resistant_Hiking_Pants.jpeg","/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"])],
         "precipitation_outfit": [],
         "colors": ["yellow", "aqua", "skyblue", "coral", "limegreen"]
       }
@@ -515,12 +516,64 @@ class TestGenericClothesModelUnit(TestCase):
   * Temperature Based Outfit Generation Per Data Set (Temp, Humidity, Precipitation, Wind) #38 
   * Temperature Based Outfit Generation #14
   * Precipitation Based Outfit Generation #44
+  * Rerolling Clothing Recommendations #53
 
   Note that the unit tests overlap with the model so it did not make much sense to separate the classes. 
   """
 
   fixtures = ['fixture_generic_clothes.json']
 
+
+  # --------------------------- get_outfit_recommendation ---------------------------
+
+  def get_clothes_in_temp_reroll(self):
+    """
+    Tests that the get_clothes_in_temp_reroll(cls, comfort, type)
+    function returns a correct outfit reroll based on the type.
+    """
+
+    comfort = 50
+    type = 'HAT'
+    expected_return = (
+      {
+        "image": "/media/generic_clothes/Cotton_Baseball_Cap.jpeg",
+        "name": "Cotton Baseball Cap"
+      }, 10
+    )
+
+    with patch('random.randint') as mock_randit:
+      mock_randit.return_value = lambda : 1
+      
+      rerolled_outfit = get_clothes_in_temp_reroll(comfort, type)
+      self.assertEqual(rerolled_outfit, expected_return)
+
+  def get_clothes_in_temp_comfort_out_of_range(self):
+    """
+    Tests that the get_clothes_in_temp_reroll(cls, comfort, type)
+    function returns a ValueError when the comfort is invalid.
+    """
+
+    comfort = 50000000
+    type = 'HAT'
+    
+    with self.assertRaises(ValueError):
+      rerolled_outfit = get_clothes_in_temp_reroll(comfort, type)
+
+  def get_clothes_in_temp_wrong_type(self):
+    """
+    Tests that the get_clothes_in_temp_reroll(cls, comfort, type)
+    function returns a correct outfit reroll based on the type.
+    """
+
+    comfort = 50
+    type = 'NOT'
+
+    with self.assertRaises(ValueError):
+      rerolled_outfit = get_clothes_in_temp_reroll(comfort, type)
+  
+  # ---------------------------------------------------------------------------------
+  
+  
   # --------------------------- save ---------------------------
 
   def test_save(self):
@@ -634,10 +687,10 @@ class TestGenericClothesModelUnit(TestCase):
     # Assert
     self.assertEqual(len(outfit), 4)
     self.assertEqual(outfit_names, [
-        "Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers",
+        "Wool Beanie", "Heavy Wool Sweater", "Thermal Wool Trousers",
         "Waterproof Hiking Boots"
     ])
-    self.assertEqual(water_avg, 46.25)
+    self.assertEqual(water_avg, 51.25)
 
   
   def test_normal__get_clothes_in_temp(self):
@@ -655,10 +708,10 @@ class TestGenericClothesModelUnit(TestCase):
 
     self.assertEqual(len(outfit), 4)
     self.assertEqual(outfit_names, [
-        "Ventilated Bucket Hat", "Breathable Long Sleeve",
+        "Breathable Sun Hat", "Breathable Long Sleeve",
         "Convertible Cargo Pants", "Breathable Trail Running Shoes"
     ])
-    self.assertEqual(water_avg, 20.0)
+    self.assertEqual(water_avg, 21.25)
 
   
   def test_hot__get_clothes_in_temp(self):
@@ -676,7 +729,7 @@ class TestGenericClothesModelUnit(TestCase):
 
     self.assertEqual(len(outfit), 4)
     self.assertEqual(outfit_names, [
-        "Ultra-Light Solar Shield Hat", "Mesh Ventilated Running Shirt",
+        "Ultra-light Running Cap", "Mesh Ventilated Running Shirt",
         "Ventilated Mesh Shorts", "Ventilated Mesh Sandals"
     ])
     self.assertEqual(water_avg , 10)
