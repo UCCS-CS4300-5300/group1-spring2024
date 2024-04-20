@@ -11,12 +11,84 @@ from .utils import NewDate, NewDatetime
 
 class TestGenericClothesIntegration(TestCase):
   """
-  Tests user story: Temperature Based Outfit Generation Per Data Set (Temp, Humidity, Precipitation, Wind) #38 and user story: Temperature Based Outfit Generation #14 at the integration level. 
+  Tests user story: 
+  * Temperature Based Outfit Generation Per Data Set (Temp, Humidity, Precipitation, Wind) #38 
+  * Temperature Based Outfit Generation #14 
+  * Rerolling Clothing Recommendations #53
+  
+  at the integration level. 
   """
 
   maxDiff=None
   fixtures = ['fixture_generic_clothes.json']
 
+  # -----------------------------------------------------
+  
+  def test_integration_reroll_outfit(self):
+    """
+    Tests that the rerolling functionality works when valid inputs are passed.
+    * Endpoint: /recommendation/reroll/
+    * Params: reroll_article, comfort_current, comfort_tomorrow, comfort_two_days
+    """
+
+    # arrange
+    context = {
+      "reroll_article": "HAT", 
+      "comfort_current": "30", 
+      "comfort_tomorrow": "60",
+      "comfort_two_days": "90"
+    }
+
+    # act
+    with patch('random.randint') as mock_randint:
+      mock_randint.return_value = 1
+
+      response = self.client.get(reverse('reroll'), context)
+    
+    context_data = json.loads(response.content)
+
+    # assert
+    self.assertEqual(response.status_code, 200)
+    
+    self.assertEqual(
+      context_data['article_reroll_current'], 
+      [{'image': "/media/generic_clothes/Lightweight_Rain_Hat.jpeg", 'name': "Lightweight Rain Hat"}, 100]
+    )
+    
+    self.assertEqual(
+      context_data['article_reroll_tomorrow'], 
+      [{'image': "/media/generic_clothes/Cotton_Baseball_Cap.jpeg", 'name': "Cotton Baseball Cap"}, 10]
+    )    
+    
+    self.assertEqual(
+      context_data['article_reroll_two_days'], 
+      [{'image': "/media/generic_clothes/Light_Visor.jpg", 'name': "Light Visor"}, 5]
+    )
+
+
+  def test_integration_reroll_outfit_invalid_inputs(self):
+    """
+    Tests that the rerolling functionality fails when invalid inputs are passed.
+    """
+
+    # arrange
+    context = {
+      "reroll_article": "HAT", 
+      "comfort_current": "Not a number", 
+      "comfort_tomorrow": "60",
+      "comfort_two_days": "90"
+    }
+
+    # act
+    response = self.client.get(reverse('reroll'), context)
+    context_data = json.loads(response.content)
+
+    # assert
+    self.assertEqual(response.status_code, 400)
+    self.assertIn("Invalid parameters", context_data['error'])
+
+  # -----------------------------------------------------
+  
   def test_integration_temperature_generation_invalid_inputs(self):
     """
     Have to stub API call since we need to determine what clothes should be worn to ensure the test is repeatable. 
