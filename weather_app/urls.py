@@ -19,7 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
-from .views import WeatherView, TemperatureView, GenericClothesListView, RegisterUser
+from .views import WeatherView, TemperatureView, GenericClothesListView, RegisterUser, recommendation_reroll
 from . import views
 from django.contrib.auth import views as auth_views
 
@@ -31,7 +31,7 @@ urlpatterns = [
     path('inventory/', GenericClothesListView.as_view(), name='inventory'),
     path('inventory/add_item', views.addItem, name='add_item'),
     path('inventory/delete_item/<int:id>', views.deleteItem, name='delete_item'),
-
+    path('recommendation/reroll/', recommendation_reroll, name='reroll'),
     #user auth paths
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/register/', RegisterUser.as_view(), name = 'register'),

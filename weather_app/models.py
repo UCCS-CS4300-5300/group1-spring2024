@@ -1,4 +1,5 @@
 from datetime import date, datetime
+import random
 import requests
 import requests_cache
 from django.core import validators
@@ -108,14 +109,46 @@ class GenericClothes(models.Model):
 
     wind_chill = calculate_windchill(temperature, wind_speed)
     return wind_chill - tolerance_offset + working_offset
+
   
+  @classmethod 
+  def get_clothes_in_temp_reroll(cls, comfort, type):
+    """
+    Function that, given a comfort level, returns a random 
+    article of clothing of a specified type (Hat, Shirt, etc)
+    and its waterproofness
+
+    Comfort should be in range -460 (absolute zero) and 6100 (melting point of tungsten)
+    """
+
+    context = {}
+    waterproof_average = 0
+    
+    if comfort < -460 or comfort > 6100:
+      raise ValueError("Comfort must be in range -460 (absolute zero) and 6100 (melting point of tungsten).")
+
+
+    if type not in ["HAT", "SHR", "PNT", "SHO", "MIS"]:
+      raise ValueError("Type must be one of the following: HAT, SHR, PNT, SHO, MIS.")
+
+    clothes = cls.objects.filter(clothing_type=type, comfort_low__lte=comfort, comfort_high__gte=comfort)
+
+    if len(clothes) == 0:
+        return None
+
+    random_clothe = clothes[random.randint(0, len(clothes) - 1)]
+
+    context["image"] = random_clothe.image.url
+    context["name"] = random_clothe.name
+    
+    return (context, random_clothe.waterproof_rating)
+    
   @classmethod
   def _get_clothes_in_temp(cls, comfort):
     """
     Function that, given a comfort value, iterates through the current clothes in the database.
     Returns:
     * The first set of clothes that are within the comfort range with the maximum waterproofing.
-    * The set of clothes for precipitation.
     * The average waterproofing of the clothes.
 
     Comfort should be in range -460 (absolute zero) and 6100 (melting point of tungsten)
@@ -169,7 +202,6 @@ class GenericClothes(models.Model):
     return list(outfit)
 
   
-  # A major refactoring
   @classmethod
   def get_outfit_recommendation(cls, temperature, humidity, wind,
                                 precipitation, tolerance_offset,

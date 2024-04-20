@@ -25,11 +25,36 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 import os
 from dotenv import load_dotenv
 
+from django.http import JsonResponse
+
 # Load environment variables from .env file
 load_dotenv()
 
 import logging
 logger = logging.getLogger("test_logger")
+
+def recommendation_reroll(request):
+  """
+  /recommendation/reroll endpoint
+  For rerolling a specific type of article clothing 
+  """
+  
+  reroll_article = request.GET.get('reroll_article')
+  comfort_current = request.GET.get('comfort_current')
+  comfort_tomorrow = request.GET.get('comfort_tomorrow')
+  comfort_two_days = request.GET.get('comfort_two_days')
+
+  if reroll_article and comfort_current and comfort_tomorrow and comfort_two_days:
+    try:
+      article_reroll_current = GenericClothes.get_clothes_in_temp_reroll(float(comfort_current), reroll_article)
+      article_reroll_tomorrow = GenericClothes.get_clothes_in_temp_reroll(float(comfort_tomorrow), reroll_article)
+      article_reroll_two_days = GenericClothes.get_clothes_in_temp_reroll(float(comfort_two_days), reroll_article)
+
+      return JsonResponse({'article_reroll_current': article_reroll_current, 'article_reroll_tomorrow': article_reroll_tomorrow, 'article_reroll_two_days': article_reroll_two_days})
+    except Exception as e: 
+      return JsonResponse({"error": f"Invalid parameters, error {e}"})
+
+  return JsonResponse({"error": "Missing parameters"})
 
 class TemperatureView(View):
   """
@@ -40,7 +65,7 @@ class TemperatureView(View):
     """
     Using a get request since the action does not affect persistent data. Based on this tutorial with django   (https://docs.djangoproject.com/en/5.0/topics/forms/)
     """
-
+    
     tolerance_offset = request.GET.get('tolerance_offset')
     working_offset = request.GET.get('working_offset')
     location = request.GET.get('location') # included in the sidebar
