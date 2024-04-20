@@ -499,3 +499,111 @@ class TestWeatherViewUnitTest(TestCase):
   
     self.assertEqual(response.status_code, 206)
     self.assertEqual(expected_response['error_message'], response_context['error_message'])
+
+
+class TestWeatherIntegration(TestCase):
+  """
+  Tests epics Weather #31 for the WeatherView class at the integration level.
+  """
+
+  def test_integration_weather(self):
+    """
+    Tests that the user can access the weather when they provide location.
+    """
+
+    context = {
+      "location": "Nueva York"
+    }
+  
+    mock_weather_api_response = [
+      {
+        "number": 1,
+        "name": "",
+        "startTime": "2024-02-24T18:00:00-07:00",
+        "endTime": "2024-02-24T19:00:00-07:00",
+        "temperature": 10,
+        "temperatureUnit": "F",
+        "probabilityOfPrecipitation": {
+          "unitCode": "wmoUnit:percent",
+          "value": 90
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": -11.666666666666666
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 30
+        },
+        "windSpeed": "10 mph",
+        "windDirection": "WNW",
+        "icon": "https://api.weather.gov/icons/land/night/bkn,0?size=small",
+        "shortForecast": "Mostly Cloudy",
+        "detailedForecast": ""
+      },
+      {
+        "number": 1,
+        "name": "",
+        "startTime": "2024-02-24T19:00:00-07:00",
+        "endTime": "2024-02-24T20:00:00-07:00",
+        "temperature": 20,
+        "temperatureUnit": "F",
+        "probabilityOfPrecipitation": {
+          "unitCode": "wmoUnit:percent",
+          "value": 100
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": -11.666666666666666
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 40
+        },
+        "windSpeed": "25 mph",
+        "windDirection": "WNW",
+        "icon": "https://api.weather.gov/icons/land/night/bkn,0?size=small",
+        "shortForecast": "Mostly Cloudy",
+        "detailedForecast": ""
+      }
+    ]
+
+    with (
+      patch('weather_app.models.Weather._get_weather') as mock__get_weather
+    ):
+      mock__get_weather.return_value = mock_weather_api_response
+  
+      response = self.client.get(reverse('home'), context)
+      response_context = response.context  
+  
+    self.assertEqual(response.status_code, 200)
+    self.assertIn('temp_forecast', response_context)
+    self.assertIn('precipitation_forecast', response_context)
+    self.assertIn('humidity_forecast', response_context)
+    self.assertIn('wind_forecast', response_context)
+    self.assertIn('day_forecast', response_context)
+    self.assertIn('location', response_context)
+
+
+  
+  def test_integration_weather_invalid_location(self):
+    """
+    Test the user gets error when they provide an invalid location.
+    """
+
+    context = {
+      "location": "Nueva York"
+    }
+    
+    mock_weather_api_response = []
+    
+    with (
+      patch('weather_app.models.Weather._get_weather') as mock__get_weather
+    ):
+      mock__get_weather.return_value = mock_weather_api_response
+    
+      response = self.client.get(reverse('home'), context)
+      response_context = response.context  
+    
+    self.assertEqual(response.status_code, 206)
+    self.assertIn('error_message', response_context)
