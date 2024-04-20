@@ -52,9 +52,9 @@ def recommendation_reroll(request):
 
       return JsonResponse({'article_reroll_current': article_reroll_current, 'article_reroll_tomorrow': article_reroll_tomorrow, 'article_reroll_two_days': article_reroll_two_days})
     except Exception as e: 
-      return JsonResponse({"error": f"Invalid parameters, error {e}"})
+      return JsonResponse({"error": f"Invalid parameters, error {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
-  return JsonResponse({"error": "Missing parameters"})
+  return JsonResponse({"error": "Missing parameters"}, status=status.HTTP_400_BAD_REQUEST)
 
 class TemperatureView(View):
   """

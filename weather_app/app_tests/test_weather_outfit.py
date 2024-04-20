@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from unittest.mock import patch, call
 import random
+import json
 from ..models import GenericClothes
 from .. import models
 from .. import utils
@@ -334,6 +335,7 @@ class TestGenericClothesViewUnit(TestCase):
   2. Temperature Based Outfit Generation #14 
   3. Location Based Weather Generation Matching #33
   4. Precipitation Based Outfit Generation #44
+  5. Rerolling Clothing Recommendations #53
 
   for the view unit.
 
@@ -342,6 +344,82 @@ class TestGenericClothesViewUnit(TestCase):
 
   fixtures = ['fixture_generic_clothes.json']
 
+  # ------------------------- recommendation_reroll -------------------------
+
+  def test_view_recommendation_reroll(self):
+    """
+    Tests that the view calls model function and returns the expected output.
+    Assumes valid inputs
+    """
+
+    context = {
+      "reroll_article": "HAT",
+      "comfort_current": "30",
+      "comfort_tomorrow": "60",
+      "comfort_two_days": "90"
+    }
+
+    exptected_temp_reroll_calls = [
+      call(30.0, 'HAT'),
+      call(60.0, 'HAT'),
+      call(90.0, 'HAT')
+    ]      
+
+    with patch('weather_app.models.GenericClothes.get_clothes_in_temp_reroll') as mock_temp_reroll:
+      mock_temp_reroll.return_value = "Maraqueen Marauder Hat"
+
+      json_response = self.client.get(reverse('reroll'), context)
+      json_load_response = json.loads(json_response.content) # converts bytes to dictionary
+      
+      self.assertEqual(json_response.status_code, 200)      
+      self.assertEqual(json_load_response["article_reroll_current"], "Maraqueen Marauder Hat")
+      self.assertEqual(json_load_response["article_reroll_tomorrow"], "Maraqueen Marauder Hat")
+      self.assertEqual(json_load_response["article_reroll_two_days"], "Maraqueen Marauder Hat")      
+      
+      mock_temp_reroll.assert_has_calls(exptected_temp_reroll_calls, any_order=False)
+  
+  def test_view_recommendation_reroll_invalid_inputs(self):
+    """
+    Tests that the view throws an error.
+    Assumes inputs are invalid but all there
+    """
+
+    context = {
+      "reroll_article": "HAT",
+      "comfort_current": "Not a number",
+      "comfort_tomorrow": "60",
+      "comfort_two_days": "90"
+    }
+
+    with patch('weather_app.models.GenericClothes.get_clothes_in_temp_reroll') as mock_temp_reroll:
+      mock_temp_reroll.side_effect = ValueError("Invalid temperature")
+
+      json_response = self.client.get(reverse('reroll'), context)
+      json_load_response = json.loads(json_response.content) # converts bytes to dictionary
+
+      self.assertEqual(json_response.status_code, 400)      
+      self.assertIn("Invalid parameters, error", json_load_response["error"]) 
+  
+  def test_view_recommendation_reroll_missing_inputs(self):
+    """
+    Tests that the view has invalid parameters.
+    Assumes not all inputs are provided
+    """
+
+    context = {
+      "reroll_article": "HAT",
+      "comfort_current": "30",
+      "comfort_tomorrow": "60",
+    }
+
+    json_response = self.client.get(reverse('reroll'), context)
+    json_load_response = json.loads(json_response.content) # converts bytes to dictionary
+
+    self.assertEqual(json_response.status_code, 400)      
+    self.assertIn("Missing parameters", json_load_response["error"]) 
+  
+  # ---------------------------------------------------------------------------
+  
   def test_view_returns_color_when_selected(self):
     """
     Tests that the view returns the colors when the setting is chosen
@@ -831,7 +909,7 @@ class TestGenericClothesModelUnit(TestCase):
     """
 
     with patch('utils.calculate_heat_index') as chi, self.assertRaises(ValueError):
-      chi.return_value = lambda: exec('raise ValueError')
+      chi.side_effect = ValueError()
       GenericClothes._calculate_comfort(temperature=76,
                                        humidity=1,
                                        wind_speed=10,
