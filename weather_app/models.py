@@ -388,27 +388,24 @@ class Weather(models.Model):
 
     """
 
-    hours = [
-        datetime.fromisoformat(start_time["startTime"]).hour
-        for start_time in weather_data
-    ]
-    temperature = [temp["temperature"] for temp in weather_data]
-    precipitation = [
-        prec["probabilityOfPrecipitation"]["value"] for prec in weather_data
-    ]
-    humidity = [humid["relativeHumidity"]["value"] for humid in weather_data]
-    wind_speed = [
-        int(windSpeed["windSpeed"].split(" ")[0]) for windSpeed in weather_data
-    ]
+    if weather_data is None:
+      return {}
 
     result = {
-        "hours": hours,
-        "temperature": temperature,
-        "precipitation": precipitation,
-        "humidity": humidity,
-        "wind": wind_speed,
-        "location": location
+      "hours": [],
+      "temperature": [], 
+      "precipitation": [],
+      "humidity": [],
+      "wind": [],
+      "location": location
     }
+
+    for period in weather_data:
+      result["hours"].append(datetime.fromisoformat(period["startTime"]).hour)
+      result["temperature"].append(period["temperature"])
+      result["precipitation"].append(period["probabilityOfPrecipitation"]["value"])
+      result["humidity"].append(period["relativeHumidity"]["value"])
+      result["wind"].append(int(period["windSpeed"].split(" ")[0]))
 
     return result
 
@@ -448,45 +445,3 @@ class AppUser(models.Model):
   def get_absolute_url(self):
     return reverse('user-detail', args=[str(self.id)])
     
-""" def get_location():
-  app = Nominatim(user_agent="Weather App")
-  location_input = input("Enter your location: ")
-
-  location = app.geocode(location_input)
-
-  latitude = location.latitude
-  longitude = location.longitude
-
-  return latitude, longitude
-
-def get_hourly_weather_report(latitude, longitude):
-    base_url = "https://api.weather.gov/points/{},{}".format(latitude, longitude)
-
-    # Fetching forecast data
-    response = requests.get(base_url)
-    if response.status_code != 200:
-        print("Failed to fetch data from API")
-        return
-
-    data = response.json()
-    forecast_url = data["properties"]["forecastHourly"]
-
-    # Fetching hourly forecast data
-    response = requests.get(forecast_url)
-    if response.status_code != 200:
-        print("Failed to fetch forecast data from API")
-        return
-
-    forecast_data = response.json()
-
-    # Extracting and printing hourly weather report
-    print("Hourly Weather Report for {}, {}".format(data["properties"]["relativeLocation"]["properties"]["city"],
-                                                   data["properties"]["relativeLocation"]["properties"]["state"]))
-    print("-" * 50)
-
-    for forecast in forecast_data["properties"]["periods"]:
-        forecast_time = datetime.strptime(forecast["startTime"], "%Y-%m-%dT%H:%M:%S%z").strftime("%H:%M")
-        print("{}: {}".format(forecast_time, forecast["shortForecast"]))
-
-latitude, longitude = get_location()
-get_hourly_weather_report(latitude, longitude) """
