@@ -112,6 +112,91 @@ class TestWeatherUnitTest(TestCase):
       
   # ---------------------------------------------------------------------------------
 
+  # --------------------------- _format_response ---------------------------
+
+  def test__format_response(self):
+    """
+    Tests _format_response(weather_data, location)
+    * Ensures it can correctly format data
+    """
+
+    input_data = [
+      {
+        "number": 1,
+        "name": "",
+        "startTime": "2024-02-24T18:00:00-07:00",
+        "endTime": "2024-02-24T19:00:00-07:00",
+        "temperature": 10,
+        "temperatureUnit": "F",
+        "probabilityOfPrecipitation": {
+          "unitCode": "wmoUnit:percent",
+          "value": 90
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": -11.666666666666666
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 30
+        },
+        "windSpeed": "10 mph",
+        "windDirection": "WNW",
+        "icon": "https://api.weather.gov/icons/land/night/bkn,0?size=small",
+        "shortForecast": "Mostly Cloudy",
+        "detailedForecast": ""
+      },
+      {
+        "number": 1,
+        "name": "",
+        "startTime": "2024-02-24T19:00:00-07:00",
+        "endTime": "2024-02-24T20:00:00-07:00",
+        "temperature": 20,
+        "temperatureUnit": "F",
+        "probabilityOfPrecipitation": {
+          "unitCode": "wmoUnit:percent",
+          "value": 100
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": -11.666666666666666
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 40
+        },
+        "windSpeed": "25 mph",
+        "windDirection": "WNW",
+        "icon": "https://api.weather.gov/icons/land/night/bkn,0?size=small",
+        "shortForecast": "Mostly Cloudy",
+        "detailedForecast": ""
+      }
+    ]
+
+    expected_output = {
+      "hours": [18, 19],
+      "temperature": [10, 20],
+      "precipitation": [90, 100],
+      "humidity": [30, 40],
+      "wind": [10, 25],
+      "location": "New York"
+    }
+
+    output = Weather._format_response(input_data, "New York")
+    self.assertEqual(output, expected_output)
+  
+  def test__format_response_bad_inputs(self):
+    """
+    Tests _format_response(weather_data, location)
+    * Should return [] given no input
+    """
+
+    output = Weather._format_response(None, None)
+    self.assertEqual(output, {})
+
+  # ---------------------------------------------------------------------------------
+
+
 class TestWeatherViewUnitTest(TestCase):
   """
   Tests epics Weather #31 for the WeatherView class
