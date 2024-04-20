@@ -417,7 +417,6 @@ class TestWeatherUnitTest(TestCase):
 
   # ---------------------------------------------------------------------------------
 
-
 class TestWeatherViewUnitTest(TestCase):
   """
   Tests epics Weather #31 for the WeatherView class
