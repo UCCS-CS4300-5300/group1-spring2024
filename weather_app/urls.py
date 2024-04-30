@@ -33,6 +33,7 @@ urlpatterns = [
     path('inventory/delete_item/<int:id>', views.deleteItem, name='delete_item'),
     path('recommendation/reroll/', recommendation_reroll, name='reroll'),
     #user auth paths
+    path('accounts/profile/', WeatherView.as_view(), name='profile'),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('accounts/register/', RegisterUser.as_view(), name = 'register'),
+    path('accounts/register/', RegisterUser.as_view(), name = 'register')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
