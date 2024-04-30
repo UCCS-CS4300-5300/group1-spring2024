@@ -237,26 +237,31 @@ def addItem(request):
       form = AddForm(request.POST,  request.FILES)
       
       if form.is_valid():
-        image_file = request.FILES['photo']
-        timestamp = datetime.now().strftime('%Y%m%d')
+        # Code does not work, always redirects to error.html (which doesn't exist by the way) 
+        # even with env in same directory as manage.py
+        # Also AWS is currently incompatible with what we have and its easier to change
+        # this than the recommendation algorithm
+        # image_file = request.FILES['photo']
+        # timestamp = datetime.now().strftime('%Y%m%d')
 
-        # Upload the image to S3
-        s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
-        image_path = f'inventory/photos/{image_file.name}_{timestamp}'
+        # # Upload the image to S3
+        # s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+        # image_path = f'inventory/photos/{image_file.name}_{timestamp}'
 
-        try:
-            s3.upload_fileobj(image_file, os.getenv('AWS_STORAGE_BUCKET_NAME'), image_path)
-        except Exception as e:
-            # Handle the exception, perhaps log it
-            print(f"Error uploading image to S3: {e}")
-            return render(request, 'weather_app/error.html', {'message': 'Error uploading image. Please try again.'})
+        # try:
+        #     s3.upload_fileobj(image_file, os.getenv('AWS_STORAGE_BUCKET_NAME'), image_path)
+        # except Exception as e:
+        #     # Handle the exception, perhaps log it
+        #     print(f"Error uploading image to S3: {e}")
+        #     return render(request, 'weather_app/error.html', {'message': 'Error uploading image. Please try again.'})
 
-        # Generate the image URL
-        image_url = f"https://{os.getenv('AWS_STORAGE_BUCKET_NAME')}.s3.amazonaws.com/{image_path}"
+        # # Generate the image URL
+        # image_url = f"https://{os.getenv('AWS_STORAGE_BUCKET_NAME')}.s3.amazonaws.com/{image_path}"
 
-        # Save the image URL to the form
-        form.instance.image_url = image_url
-        form.instance.photo = None
+        # # Save the image URL to the form
+        # form.instance.image_url = image_url
+        # form.instance.photo = None
+        
         post = form.save(commit=False)
         post.save()
 

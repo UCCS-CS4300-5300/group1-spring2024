@@ -17,4 +17,4 @@ class AddForm(ModelForm):
   """
   class Meta:
     model = GenericClothes
-    fields = ('name', 'clothing_type', 'comfort_low', 'comfort_high', 'waterproof_rating', 'photo', 'image_url')
+    fields = ('name', 'clothing_type', 'comfort_low', 'comfort_high', 'waterproof_rating', 'image')
