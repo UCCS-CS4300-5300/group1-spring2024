@@ -438,7 +438,7 @@ class Weather(models.Model):
 
 class AppUser(models.Model):
   username = models.CharField(max_length=30, unique=True)
-  inventory = models.ManyToManyField(GenericClothes, related_name='users')
+  # inventory = models.ManyToManyField(GenericClothes, related_name='users')
   
   def __str__(self):
     return self.name
