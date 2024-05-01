@@ -1,10 +1,13 @@
 from datetime import date, datetime
+import random
 import requests
 import requests_cache
 from django.core import validators
 from django.db import models
+from django.urls import reverse
 from geopy.geocoders import Nominatim
 from django_resized import ResizedImageField
+from .utils import calculate_heat_index, calculate_windchill
 
 # https://docs.djangoproject.com/en/5.0/howto/initial-data/#:~:text=You%20can%20load%20data%20by,and%20reloaded%20into%20the%20database to populate the list of generic clothes
 # Must be loaded manually using python manage.py loaddata fixture_generic_clothes.json
@@ -61,25 +64,16 @@ class GenericClothes(models.Model):
     https://stackoverflow.com/questions/34128251/how-to-pass-django-model-field-value-as-an-argument-to-callable-which-is-default.
     """
 
+    default_clothe_image = {
+      "HAT": "generic_clothes/default-hat.png",
+      "PNT": "generic_clothes/default-pants.png",
+      "SHR": "generic_clothes/default-shirt.png",
+      "SHO": "generic_clothes/default-shoe.png",
+      "MIS": "generic_clothes/default.png"
+    }
+    
     if not self.pk:  # if object is new
-      image_path = "generic_clothes/default.png"
-      if self.clothing_type == "HAT":
-        image_path = "generic_clothes/default-hat.png"
-      elif self.clothing_type == "PNT":
-        image_path = "generic_clothes/default-pants.png"
-      elif self.clothing_type == "SHR":
-        image_path = "generic_clothes/default-shirt.png"
-      elif self.clothing_type == "SHO":
-        image_path = "generic_clothes/default-shoe.png"
-
-      # file_name = os.path.basename(image_path)
-      # https://gist.github.com/iambibhas/5051911
-      # path = settings.MEDIA_ROOT + image_path
-      # file = File(open(path, 'rb'))
-      # self.image.save(file_name, file, save=False)
-
-      self.image.name = image_path
-      
+      self.image.name = default_clothe_image[str(self.clothing_type)]
       super().save(*args, **kwargs)
 
   
@@ -97,35 +91,54 @@ class GenericClothes(models.Model):
     Returns the adjusted feels-like temperature in farenheit.
     """
 
-    if humidity < 0:
-      raise ValueError("Humidity must be greater than or equal to 0.")
-
-    if wind_speed < 0:
-      raise ValueError("Wind speed must be greater than or equal to 0.")
-
     if working_offset < 0:
       raise ValueError("Working offset must be greater than or equal to 0.")
 
-    # Calculate the adjusted feels-like temperature
+    # Calculate the adjusted 'feels-like' temperature
     if temperature > 75:
-      # equation from https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
-      heat_index = -42.379 + 2.04901523 * temperature + 10.14333127 * humidity - 0.22475541 * temperature * humidity - 0.00683783 * temperature * temperature - 0.05481717 * humidity * humidity + 0.00122874 * temperature * temperature * humidity + 0.00085282 * temperature * humidity * humidity - 0.00000199 * temperature * temperature * humidity * humidity
+      heat_index = calculate_heat_index(temperature, humidity)
       return heat_index - tolerance_offset + working_offset
 
-    # If the temperature is less than or equal to 75, use the wind chill
-    # equation from https://en.wikipedia.org/wiki/Wind_chill NA wind chill index
-    wind_chill = 35.74 + 0.6215 * temperature - 35.75 * (
-        wind_speed**0.16) + 0.4275 * temperature * (wind_speed**0.16)
+    wind_chill = calculate_windchill(temperature, wind_speed)
     return wind_chill - tolerance_offset + working_offset
 
   
+  @classmethod 
+  def get_clothes_in_temp_reroll(cls, comfort, type):
+    """
+    Function that, given a comfort level, returns a random 
+    article of clothing of a specified type (Hat, Shirt, etc)
+    and its waterproofness
+
+    Comfort should be in range -460 (absolute zero) and 6100 (melting point of tungsten)
+    """
+
+    context = {}
+    
+    if comfort < -460 or comfort > 6100:
+      raise ValueError("Comfort must be in range -460 (absolute zero) and 6100 (melting point of tungsten).")
+
+    if type not in ["HAT", "SHR", "PNT", "SHO", "MIS"]:
+      raise ValueError("Type must be one of the following: HAT, SHR, PNT, SHO, MIS.")
+
+    clothes = cls.objects.filter(clothing_type=type, comfort_low__lte=comfort, comfort_high__gte=comfort)
+
+    if len(clothes) == 0:
+        return None
+
+    random_clothe = clothes[random.randint(0, len(clothes) - 1)]
+
+    context["image"] = random_clothe.image.url
+    context["name"] = random_clothe.name
+    
+    return (context, random_clothe.waterproof_rating)
+    
   @classmethod
   def _get_clothes_in_temp(cls, comfort):
     """
     Function that, given a comfort value, iterates through the current clothes in the database.
     Returns:
     * The first set of clothes that are within the comfort range with the maximum waterproofing.
-    * The set of clothes for precipitation.
     * The average waterproofing of the clothes.
 
     Comfort should be in range -460 (absolute zero) and 6100 (melting point of tungsten)
@@ -174,12 +187,11 @@ class GenericClothes(models.Model):
 
     if average_waterproof > precipitation_chance:
       return []
-    else:
-      outfit = cls.objects.filter(clothing_type="MIS")
-      return list(outfit)
+
+    outfit = cls.objects.filter(clothing_type="MIS")
+    return list(outfit)
 
   
-  # A major refactoring
   @classmethod
   def get_outfit_recommendation(cls, temperature, humidity, wind,
                                 precipitation, tolerance_offset,
@@ -257,6 +269,10 @@ class GenericClothes(models.Model):
 
 
 class Location(models.Model):
+  """
+  I don't actually think this is used.
+  """
+  
   name = models.CharField(max_length=30)
 
   def __str__(self):
@@ -264,6 +280,9 @@ class Location(models.Model):
 
 
 class Weather(models.Model):
+  """
+  This might have a lot of unecessary fields.
+  """
 
   location = models.ForeignKey(Location, on_delete=models.CASCADE)
   temperature = models.FloatField()
@@ -274,6 +293,9 @@ class Weather(models.Model):
   date = models.DateTimeField()
 
   def __str__(self):
+    """
+    Returns a string of the location
+    """
     return str(self.location)
 
   def _get_weather(latitude, longitude):
@@ -376,27 +398,24 @@ class Weather(models.Model):
 
     """
 
-    hours = [
-        datetime.fromisoformat(start_time["startTime"]).hour
-        for start_time in weather_data
-    ]
-    temperature = [temp["temperature"] for temp in weather_data]
-    precipitation = [
-        prec["probabilityOfPrecipitation"]["value"] for prec in weather_data
-    ]
-    humidity = [humid["relativeHumidity"]["value"] for humid in weather_data]
-    wind_speed = [
-        int(windSpeed["windSpeed"].split(" ")[0]) for windSpeed in weather_data
-    ]
+    if weather_data is None:
+      return {}
 
     result = {
-        "hours": hours,
-        "temperature": temperature,
-        "precipitation": precipitation,
-        "humidity": humidity,
-        "wind": wind_speed,
-        "location": location
+      "hours": [],
+      "temperature": [], 
+      "precipitation": [],
+      "humidity": [],
+      "wind": [],
+      "location": location
     }
+
+    for period in weather_data:
+      result["hours"].append(datetime.fromisoformat(period["startTime"]).hour)
+      result["temperature"].append(period["temperature"])
+      result["precipitation"].append(period["probabilityOfPrecipitation"]["value"])
+      result["humidity"].append(period["relativeHumidity"]["value"])
+      result["wind"].append(int(period["windSpeed"].split(" ")[0]))
 
     return result
 
@@ -429,52 +448,12 @@ class Weather(models.Model):
 
 class AppUser(models.Model):
   username = models.CharField(max_length=30, unique=True)
-  inventory = models.ManyToManyField(GenericClothes, related_name='users')
+  # inventory = models.ManyToManyField(GenericClothes, related_name='users')
   
   def __str__(self):
+    """ Return user name """
     return self.name
+    
   def get_absolute_url(self):
     return reverse('user-detail', args=[str(self.id)])
     
-""" def get_location():
-  app = Nominatim(user_agent="Weather App")
-  location_input = input("Enter your location: ")
-
-  location = app.geocode(location_input)
-
-  latitude = location.latitude
-  longitude = location.longitude
-
-  return latitude, longitude
-
-def get_hourly_weather_report(latitude, longitude):
-    base_url = "https://api.weather.gov/points/{},{}".format(latitude, longitude)
-
-    # Fetching forecast data
-    response = requests.get(base_url)
-    if response.status_code != 200:
-        print("Failed to fetch data from API")
-        return
-
-    data = response.json()
-    forecast_url = data["properties"]["forecastHourly"]
-
-    # Fetching hourly forecast data
-    response = requests.get(forecast_url)
-    if response.status_code != 200:
-        print("Failed to fetch forecast data from API")
-        return
-
-    forecast_data = response.json()
-
-    # Extracting and printing hourly weather report
-    print("Hourly Weather Report for {}, {}".format(data["properties"]["relativeLocation"]["properties"]["city"],
-                                                   data["properties"]["relativeLocation"]["properties"]["state"]))
-    print("-" * 50)
-
-    for forecast in forecast_data["properties"]["periods"]:
-        forecast_time = datetime.strptime(forecast["startTime"], "%Y-%m-%dT%H:%M:%S%z").strftime("%H:%M")
-        print("{}: {}".format(forecast_time, forecast["shortForecast"]))
-
-latitude, longitude = get_location()
-get_hourly_weather_report(latitude, longitude) """

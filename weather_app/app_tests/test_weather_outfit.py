@@ -1,20 +1,94 @@
 from django.test import TestCase
-from ..models import GenericClothes
-import datetime
 from django.core.exceptions import ValidationError
-from unittest.mock import patch, call
 from django.urls import reverse
+from unittest.mock import patch, call
+import random
+import json
+from ..models import GenericClothes
 from .. import models
+from .. import utils
 from .utils import NewDate, NewDatetime
 
 class TestGenericClothesIntegration(TestCase):
   """
-  Tests user story: Temperature Based Outfit Generation Per Data Set (Temp, Humidity, Precipitation, Wind) #38 and user story: Temperature Based Outfit Generation #14 at the integration level. 
+  Tests user story: 
+  * Temperature Based Outfit Generation Per Data Set (Temp, Humidity, Precipitation, Wind) #38 
+  * Temperature Based Outfit Generation #14 
+  * Rerolling Clothing Recommendations #53
+  
+  at the integration level. 
   """
 
   maxDiff=None
   fixtures = ['fixture_generic_clothes.json']
 
+  # -----------------------------------------------------
+  
+  def test_integration_reroll_outfit(self):
+    """
+    Tests that the rerolling functionality works when valid inputs are passed.
+    * Endpoint: /recommendation/reroll/
+    * Params: reroll_article, comfort_current, comfort_tomorrow, comfort_two_days
+    """
+
+    # arrange
+    context = {
+      "reroll_article": "HAT", 
+      "comfort_current": "30", 
+      "comfort_tomorrow": "60",
+      "comfort_two_days": "90"
+    }
+
+    # act
+    with patch('random.randint') as mock_randint:
+      mock_randint.return_value = 1
+
+      response = self.client.get(reverse('reroll'), context)
+    
+    context_data = json.loads(response.content)
+
+    # assert
+    self.assertEqual(response.status_code, 200)
+    
+    self.assertEqual(
+      context_data['article_reroll_current'], 
+      [{'image': "/media/generic_clothes/Lightweight_Rain_Hat.jpeg", 'name': "Lightweight Rain Hat"}, 100]
+    )
+    
+    self.assertEqual(
+      context_data['article_reroll_tomorrow'], 
+      [{'image': "/media/generic_clothes/Cotton_Baseball_Cap.jpeg", 'name': "Cotton Baseball Cap"}, 10]
+    )    
+    
+    self.assertEqual(
+      context_data['article_reroll_two_days'], 
+      [{'image': "/media/generic_clothes/Light_Visor.jpg", 'name': "Light Visor"}, 5]
+    )
+
+
+  def test_integration_reroll_outfit_invalid_inputs(self):
+    """
+    Tests that the rerolling functionality fails when invalid inputs are passed.
+    """
+
+    # arrange
+    context = {
+      "reroll_article": "HAT", 
+      "comfort_current": "Not a number", 
+      "comfort_tomorrow": "60",
+      "comfort_two_days": "90"
+    }
+
+    # act
+    response = self.client.get(reverse('reroll'), context)
+    context_data = json.loads(response.content)
+
+    # assert
+    self.assertEqual(response.status_code, 400)
+    self.assertIn("Invalid parameters", context_data['error'])
+
+  # -----------------------------------------------------
+  
   def test_integration_temperature_generation_invalid_inputs(self):
     """
     Have to stub API call since we need to determine what clothes should be worn to ensure the test is repeatable. 
@@ -189,12 +263,12 @@ class TestGenericClothesIntegration(TestCase):
         {"image": c0image, "name": c0name}, {"image": c24image, "name": c24name}, {"image": c48image, "name": c48name}
       ) 
           for c0name, c0image, c24name, c24image, c48name, c48image in zip(
-        ["Thermal Running Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"], 
-        ["/media/generic_clothes/Thermal_Running_Hat.jpeg", "/media/generic_clothes/Insulated_Long_Sleeve.jpg", "/media/generic_clothes/Fleece-Lined_Softshell_Pants.jpg", "/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"],
         ["Lightweight Rain Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"], 
         ["/media/generic_clothes/Lightweight_Rain_Hat.jpeg", "/media/generic_clothes/Insulated_Long_Sleeve.jpg", "/media/generic_clothes/Fleece-Lined_Softshell_Pants.jpg", "/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"],
-        ["Cotton Baseball Cap", "Breathable Long Sleeve", "Convertible Cargo Pants", "Breathable Trail Running Shoes"], 
-        ["/media/generic_clothes/Cotton_Baseball_Cap.jpeg", "/media/generic_clothes/Breathable_Long_Sleeve.jpeg", "/media/generic_clothes/Convertible_Cargo_Pants.jpeg", "/media/generic_clothes/Breathable_Trail_Running_Shoes.jpeg"],
+        ["Lightweight Rain Hat", "Insulated Long Sleeve", "Fleece-Lined Softshell Pants", "Waterproof Hiking Boots"], 
+        ["/media/generic_clothes/Lightweight_Rain_Hat.jpeg", "/media/generic_clothes/Insulated_Long_Sleeve.jpg", "/media/generic_clothes/Fleece-Lined_Softshell_Pants.jpg", "/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"],
+        ["Breathable Sun Hat", "Breathable Long Sleeve", "Convertible Cargo Pants", "Breathable Trail Running Shoes"], 
+        ["/media/generic_clothes/Breathable_Sun_Hat.jpeg", "/media/generic_clothes/Breathable_Long_Sleeve.jpeg", "/media/generic_clothes/Convertible_Cargo_Pants.jpeg", "/media/generic_clothes/Breathable_Trail_Running_Shoes.jpeg"],
           )
     ]
 
@@ -292,8 +366,8 @@ class TestGenericClothesIntegration(TestCase):
   
       expected_return = {
         "comfort": 46.04,
-        "waterproofness": 68.75,
-        "outfit": [{"name": name, "image": url} for name, url in zip(['Breathable Sun Hat', 'Water-Resistant Softshell', 'Water-Resistant Hiking Pants', 'Waterproof Hiking Boots'], ["/media/generic_clothes/Breathable_Sun_Hat.jpeg", "/media/generic_clothes/Water-Resistant_Softshell.jpeg", "/media/generic_clothes/Water-Resistant_Hiking_Pants.jpeg","/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"])],
+        "waterproofness": 88.75,
+        "outfit": [{"name": name, "image": url} for name, url in zip(['Lightweight Rain Hat', 'Water-Resistant Softshell', 'Water-Resistant Hiking Pants', 'Waterproof Hiking Boots'], ["/media/generic_clothes/Lightweight_Rain_Hat.jpeg", "/media/generic_clothes/Water-Resistant_Softshell.jpeg", "/media/generic_clothes/Water-Resistant_Hiking_Pants.jpeg","/media/generic_clothes/Waterproof_Hiking_Boots.jpeg"])],
         "precipitation_outfit": [],
         "colors": ["yellow", "aqua", "skyblue", "coral", "limegreen"]
       }
@@ -333,6 +407,7 @@ class TestGenericClothesViewUnit(TestCase):
   2. Temperature Based Outfit Generation #14 
   3. Location Based Weather Generation Matching #33
   4. Precipitation Based Outfit Generation #44
+  5. Rerolling Clothing Recommendations #53
 
   for the view unit.
 
@@ -341,12 +416,92 @@ class TestGenericClothesViewUnit(TestCase):
 
   fixtures = ['fixture_generic_clothes.json']
 
+  # ------------------------- recommendation_reroll -------------------------
+
+  def test_view_recommendation_reroll(self):
+    """
+    Tests that the view calls model function and returns the expected output.
+    Assumes valid inputs
+    """
+
+    context = {
+      "reroll_article": "HAT",
+      "comfort_current": "30",
+      "comfort_tomorrow": "60",
+      "comfort_two_days": "90"
+    }
+
+    exptected_temp_reroll_calls = [
+      call(30.0, 'HAT'),
+      call(60.0, 'HAT'),
+      call(90.0, 'HAT')
+    ]      
+
+    with patch('weather_app.models.GenericClothes.get_clothes_in_temp_reroll') as mock_temp_reroll:
+      mock_temp_reroll.return_value = "Maraqueen Marauder Hat"
+
+      json_response = self.client.get(reverse('reroll'), context)
+      json_load_response = json.loads(json_response.content) # converts bytes to dictionary
+      
+      self.assertEqual(json_response.status_code, 200)      
+      self.assertEqual(json_load_response["article_reroll_current"], "Maraqueen Marauder Hat")
+      self.assertEqual(json_load_response["article_reroll_tomorrow"], "Maraqueen Marauder Hat")
+      self.assertEqual(json_load_response["article_reroll_two_days"], "Maraqueen Marauder Hat")      
+      
+      mock_temp_reroll.assert_has_calls(exptected_temp_reroll_calls, any_order=False)
+  
+  def test_view_recommendation_reroll_invalid_inputs(self):
+    """
+    Tests that the view throws an error.
+    Assumes inputs are invalid but all there
+    """
+
+    context = {
+      "reroll_article": "HAT",
+      "comfort_current": "Not a number",
+      "comfort_tomorrow": "60",
+      "comfort_two_days": "90"
+    }
+
+    with patch('weather_app.models.GenericClothes.get_clothes_in_temp_reroll') as mock_temp_reroll:
+      mock_temp_reroll.side_effect = ValueError("Invalid temperature")
+
+      json_response = self.client.get(reverse('reroll'), context)
+      json_load_response = json.loads(json_response.content) # converts bytes to dictionary
+
+      self.assertEqual(json_response.status_code, 400)      
+      self.assertIn("Invalid parameters, error", json_load_response["error"]) 
+  
+  def test_view_recommendation_reroll_missing_inputs(self):
+    """
+    Tests that the view has invalid parameters.
+    Assumes not all inputs are provided
+    """
+
+    context = {
+      "reroll_article": "HAT",
+      "comfort_current": "30",
+      "comfort_tomorrow": "60",
+    }
+
+    json_response = self.client.get(reverse('reroll'), context)
+    json_load_response = json.loads(json_response.content) # converts bytes to dictionary
+
+    self.assertEqual(json_response.status_code, 400)      
+    self.assertIn("Missing parameters", json_load_response["error"]) 
+  
+  # ---------------------------------------------------------------------------
+  
   def test_view_returns_color_when_selected(self):
     """
     Tests that the view returns the colors when the setting is chosen
     """
 
-    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather:
+    with (
+      patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather,
+      patch('weather_app.views.get_xth_hour_weather') as mock_get_xth_hour_weather,
+    ):
+      mock_get_xth_hour_weather.return_value = [1, 2, 3, 4]
       response = self.client.get(reverse('recommendation'), {"working_offset": "0", "tolerance_offset": "0", "checkbox_colors": "on"})
 
       context_data = response.context
@@ -383,7 +538,7 @@ class TestGenericClothesViewUnit(TestCase):
 
     with patch('weather_app.models.GenericClothes._calculate_comfort'
                ) as mock_calculate_comfort:
-      with patch('weather_app.models.GenericClothes.get_outfit_recommendation'
+      with patch('weather_app.views.GenericClothes.get_outfit_recommendation'
                  ) as mock_get_clothes_in_range:
         response = self.client.get(reverse('recommendation'), {})
 
@@ -396,7 +551,7 @@ class TestGenericClothesViewUnit(TestCase):
     Tests that the view returns 200 when correct user input is provided and calls the model methods with stubbed parameters from the get_weather_forcecast function. Also ensures the model has the correct location passed into it.
     """
 
-    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather_forecast, patch('weather_app.models.GenericClothes.get_outfit_recommendation') as mock_get_outfit_recommendation:
+    with patch('weather_app.models.Weather.get_weather_forecast') as mock_get_weather_forecast, patch('weather_app.views.GenericClothes.get_outfit_recommendation') as mock_get_outfit_recommendation:
       mwr = {
           'hours': [
               18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
@@ -515,12 +670,64 @@ class TestGenericClothesModelUnit(TestCase):
   * Temperature Based Outfit Generation Per Data Set (Temp, Humidity, Precipitation, Wind) #38 
   * Temperature Based Outfit Generation #14
   * Precipitation Based Outfit Generation #44
+  * Rerolling Clothing Recommendations #53
 
   Note that the unit tests overlap with the model so it did not make much sense to separate the classes. 
   """
 
   fixtures = ['fixture_generic_clothes.json']
 
+
+  # --------------------------- get_outfit_recommendation ---------------------------
+
+  def get_clothes_in_temp_reroll(self):
+    """
+    Tests that the get_clothes_in_temp_reroll(cls, comfort, type)
+    function returns a correct outfit reroll based on the type.
+    """
+
+    comfort = 50
+    type = 'HAT'
+    expected_return = (
+      {
+        "image": "/media/generic_clothes/Cotton_Baseball_Cap.jpeg",
+        "name": "Cotton Baseball Cap"
+      }, 10
+    )
+
+    with patch('random.randint') as mock_randit:
+      mock_randit.return_value = lambda : 1
+      
+      rerolled_outfit = get_clothes_in_temp_reroll(comfort, type)
+      self.assertEqual(rerolled_outfit, expected_return)
+
+  def get_clothes_in_temp_comfort_out_of_range(self):
+    """
+    Tests that the get_clothes_in_temp_reroll(cls, comfort, type)
+    function returns a ValueError when the comfort is invalid.
+    """
+
+    comfort = 50000000
+    type = 'HAT'
+    
+    with self.assertRaises(ValueError):
+      rerolled_outfit = get_clothes_in_temp_reroll(comfort, type)
+
+  def get_clothes_in_temp_wrong_type(self):
+    """
+    Tests that the get_clothes_in_temp_reroll(cls, comfort, type)
+    function returns a correct outfit reroll based on the type.
+    """
+
+    comfort = 50
+    type = 'NOT'
+
+    with self.assertRaises(ValueError):
+      rerolled_outfit = get_clothes_in_temp_reroll(comfort, type)
+  
+  # ---------------------------------------------------------------------------------
+  
+  
   # --------------------------- save ---------------------------
 
   def test_save(self):
@@ -544,7 +751,7 @@ class TestGenericClothesModelUnit(TestCase):
     """
 
     # Arrange
-    new_clothes = GenericClothes(name="Logan's Shirt", clothing_type="MSC", comfort_low=60, comfort_high=100, waterproof_rating=60)
+    new_clothes = GenericClothes(name="Logan's Shirt", clothing_type="MIS", comfort_low=60, comfort_high=100, waterproof_rating=60)
 
     # Act
     new_clothes.save()
@@ -581,7 +788,7 @@ class TestGenericClothesModelUnit(TestCase):
       test_clothe_1 = GenericClothes(name="test_clothe_1", clothing_type = "HAT", comfort_low = 10, comfort_high = 20, waterproof_rating = 10)
       test_clothe_1.save()
 
-      test_clothe_2 = GenericClothes(name="test_clothe_2", clothing_type = "MSC", comfort_low = 10, comfort_high = 20, waterproof_rating = 100)
+      test_clothe_2 = GenericClothes(name="test_clothe_2", clothing_type = "MIS", comfort_low = 10, comfort_high = 20, waterproof_rating = 100)
       test_clothe_2.save()
       
       test_outfit_1 = GenericClothes.objects.filter(id=test_clothe_1.id) # needs to be queryset, not object
@@ -634,10 +841,10 @@ class TestGenericClothesModelUnit(TestCase):
     # Assert
     self.assertEqual(len(outfit), 4)
     self.assertEqual(outfit_names, [
-        "Thermal Running Hat", "Heavy Wool Sweater", "Thermal Wool Trousers",
+        "Wool Beanie", "Heavy Wool Sweater", "Thermal Wool Trousers",
         "Waterproof Hiking Boots"
     ])
-    self.assertEqual(water_avg, 46.25)
+    self.assertEqual(water_avg, 51.25)
 
   
   def test_normal__get_clothes_in_temp(self):
@@ -655,10 +862,10 @@ class TestGenericClothesModelUnit(TestCase):
 
     self.assertEqual(len(outfit), 4)
     self.assertEqual(outfit_names, [
-        "Ventilated Bucket Hat", "Breathable Long Sleeve",
+        "Breathable Sun Hat", "Breathable Long Sleeve",
         "Convertible Cargo Pants", "Breathable Trail Running Shoes"
     ])
-    self.assertEqual(water_avg, 20.0)
+    self.assertEqual(water_avg, 21.25)
 
   
   def test_hot__get_clothes_in_temp(self):
@@ -676,7 +883,7 @@ class TestGenericClothesModelUnit(TestCase):
 
     self.assertEqual(len(outfit), 4)
     self.assertEqual(outfit_names, [
-        "Ultra-Light Solar Shield Hat", "Mesh Ventilated Running Shirt",
+        "Ultra-light Running Cap", "Mesh Ventilated Running Shirt",
         "Ventilated Mesh Shorts", "Ventilated Mesh Sandals"
     ])
     self.assertEqual(water_avg , 10)
@@ -760,23 +967,29 @@ class TestGenericClothesModelUnit(TestCase):
   # ---------------------------------------------------------------------------------
 
   # --------------------------- _calculate_comfort ---------------------------
+  
+  def test_calculate_comfort_modular_test(self):
+    """
+    Modular test for _calculate_comfort
+    Tests to ensure it calls the utils functions
+    """
+    test_data = [70, 50, 10, 5, 3, 68.825]
+    comfort_params = test_data[0:5]
+    expected = test_data[5]
+    comfort = GenericClothes._calculate_comfort(*comfort_params)
+    self.assertAlmostEqual(comfort, expected, places=2)
+  
   def test_calculate_comfort_invalid_working_tolerance(self):
     """
     Test working_offset is not less than 0. Sad
     """
 
-    with self.assertRaises(ValueError):
-      GenericClothes._calculate_comfort(temperature=75,
+    with patch('utils.calculate_heat_index') as chi, self.assertRaises(ValueError):
+      chi.side_effect = ValueError()
+      GenericClothes._calculate_comfort(temperature=76,
                                        humidity=1,
                                        wind_speed=10,
                                        tolerance_offset=10,
-                                       working_offset=-10)
-
-    with self.assertRaises(ValueError):
-      GenericClothes._calculate_comfort(temperature=75,
-                                       humidity=1,
-                                       wind_speed=10,
-                                       tolerance_offset=-10,
                                        working_offset=-10)
 
   def test_calculate_comfort_invalid_windspeed(self):
@@ -785,7 +998,7 @@ class TestGenericClothesModelUnit(TestCase):
     """
 
     with self.assertRaises(ValueError):
-      GenericClothes._calculate_comfort(temperature=75,
+      GenericClothes._calculate_comfort(temperature=70,
                                        humidity=1,
                                        wind_speed=-10,
                                        tolerance_offset=0,
@@ -794,14 +1007,16 @@ class TestGenericClothesModelUnit(TestCase):
   def test_calculate_comfort_invalid_humidity(self):
     """
     Test that humidity is not less than 0. Sad
+    Why are we not patching the helper function?
+    Modular test
     """
-
+    
     with self.assertRaises(ValueError):
-      GenericClothes._calculate_comfort(temperature=75,
-                                       humidity=-1,
-                                       wind_speed=10,
-                                       tolerance_offset=0,
-                                       working_offset=0)
+      GenericClothes._calculate_comfort(temperature=76,
+                                         humidity=-1,
+                                         wind_speed=10,
+                                         tolerance_offset=0,
+                                         working_offset=0)
 
   def test_calculate_comfort_low_temp(self):
     """
@@ -812,28 +1027,34 @@ class TestGenericClothesModelUnit(TestCase):
     # https://gist.github.com/aipi/99ed2c992be41be437bb9506de73cb44
     test_data = [(70, 50, 10, 5, 3, 68.825), (40, 0, 20, 1, 2, 31.481)]
 
-    for test_params in test_data:
-      with self.subTest():
-        comfort_params = test_params[0:5]
-        expected = test_params[5]
-        comfort = GenericClothes._calculate_comfort(*comfort_params)
-        self.assertAlmostEqual(comfort, expected, places=2)
+    with patch('utils.calculate_windchill') as cwc:
+      for test_params in test_data:
+        cwc.return_value = test_params[5]
+        with self.subTest():
+          comfort_params = test_params[0:5]
+          expected = test_params[5]
+          comfort = GenericClothes._calculate_comfort(*comfort_params)
+          self.assertAlmostEqual(comfort, expected, places=2)
 
   def test_calculate_comfort_high_temp(self):
     """
-    Test that calculate_comfort uses the wind chill calculation when the temperature is less than or equal to 75. Happy
+    Test that calculate_comfort uses the heat index calculation 
+    * when the temperature is greater than 75. 
+    * Happy
     """
 
     # in format of (temperature, humidity, wind_speed, tolerance_offset, working_offset, expected comfort)
     # https://gist.github.com/aipi/99ed2c992be41be437bb9506de73cb44
     test_data = [(80, 60, 5, 0, 0, 81.811), (76, 65, 15, 2, 4, 79.869)]
 
-    for test_params in test_data:
-      with self.subTest():
-        comfort_params = test_params[0:5]
-        expected = test_params[5]
-        comfort = GenericClothes._calculate_comfort(*comfort_params)
-        self.assertAlmostEqual(comfort, expected, places=2)
+    with patch('utils.calculate_heat_index') as chi:
+      for test_params in test_data:
+        chi.return_value = test_params[5]
+        with self.subTest():
+          comfort_params = test_params[0:5]
+          expected = test_params[5]
+          comfort = GenericClothes._calculate_comfort(*comfort_params)
+          self.assertAlmostEqual(comfort, expected, places=2)
 
   # ---------------------------------------------------------------------------------
 

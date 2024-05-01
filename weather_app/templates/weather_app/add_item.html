@@ -4,36 +4,47 @@
 {% block content %}
 
 <div class="container">
-    <h2>Add New Item</h2>
-    <form action="" method="POST" enctype="multipart/form-data">
-      {% csrf_token %}
-      <div class="form-group">
-        <label for="id_name">Name:</label>
-        {{ form.name }}
-      </div>
-      <div class="form-group">
-        <label for="id_clothing_type">Clothing Type:</label>
-        {{ form.clothing_type }}
-      </div>
-      <div class="form-group">
-        <label for="id_comfort_low">Comfort Low:</label>
-        {{ form.comfort_low }}
-      </div>
-      <div class="form-group">
-        <label for="id_comfort_high">Comfort High:</label>
-        {{ form.comfort_high }}
-      </div>
-      <div class="form-group">
-        <label for="id_waterproof_rating">Waterproof Rating:</label>
-        {{ form.waterproof_rating }}
-      </div>
-      <div class="form-group">
-        <label for="id_photo">Photo:</label>
-        {{ form.photo }}
-      </div>
-      <input type="submit" class="btn btn-primary" value="Submit">
-    </form>
+  <div class="row mb-2 text-center">
+    <h2>Add New Clothing Item</h2>
   </div>
+  <form action="" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row mb-2">
+      <div class="col-6">
+        <div class="form-group mb-2">
+          <label class="form-label" for="{{ form.name.id_for_label }}">Name:</label>
+          {{ form.name }}
+        </div>
+        <div class="form-group mb-2">
+          <label class="form-label" for="{{ form.comfort_low.id_for_label }}">Comfort Low:</label>
+          {{ form.comfort_low }}
+        </div>
+        <div class="form-group mb-2">
+          <label class="form-label" for="{{ form.comfort_high.id_for_label }}">Comfort High:</label>
+          {{ form.comfort_high }}
+        </div>
+      </div>
+  
+      <div class="col-6">
+        <div class="form-group mb-2">
+          <label class="form-label" for="{{ form.clothing_type.id_for_label }}">Clothing Type:</label>
+          {{ form.clothing_type }}
+        </div>
+        <div class="form-group mb-2">
+          <label class="form-label" for="{{ form.waterproof_rating.id_for_label }}">Waterproof Rating:</label>
+          {{ form.waterproof_rating }}
+        </div>
+        <div class="form-group mb-2">
+          <label class="form-label" for="{{ form.image.id_for_label }}">Image:</label>
+          {{ form.image }}
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <input type="submit" class="btn btn-primary" value="Submit">
+    </div>
+  </form>
+</div>
 
 
 {% endblock %}

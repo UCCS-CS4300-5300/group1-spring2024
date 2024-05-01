@@ -65,7 +65,7 @@
     <td>{{ cloth.comfort_low }}</td>
     <td>{{ cloth.comfort_high }}</td>
     <td>{{ cloth.waterproof_rating }}</td>
-    <td><img src="{{ cloth.image_url}}" style="width: 75px;height: 75px;"></td>
+    <td><img src="{{ cloth.image.url }}" style="width: 75px;height: 75px;"></td>
     <td><a class="btn btn-secondary" href="{% url 'delete_item' cloth.id %}" role="button">Delete</a></td>
   </tr>
   {% endfor %}

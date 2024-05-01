@@ -1,4 +1,4 @@
-<!--Extends the styling of the base template -->
+*<!--Extends the styling of the base template -->
 {% extends 'weather_app/base_template.html' %}
 {% load static %}
 
@@ -37,6 +37,52 @@
         x[i].style.display = "none";
       }
       document.getElementById(outfit).style.display = "block";
+    }
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+    // https://stackoverflow.com/questions/35038857/setting-query-string-using-fetch-get-request
+    async function fetchRerollOutfit(outfit) {
+      const url_params =  new URLSearchParams({
+        reroll_article: outfit, 
+        comfort_current: document.getElementById("comfort_current").innerText,
+        comfort_tomorrow: document.getElementById("comfort_tomorrow").innerText,
+        comfort_two_days: document.getElementById("comfort_two_days").innerText
+      })
+      const response = await fetch("{% url 'reroll' %}/?" + url_params);
+      const new_outfit = await response.json();
+      return new_outfit;
+    }
+
+    async function rerollOutfit(outfit) {
+      var x = 0;
+      switch(outfit) {
+        case 'HAT':
+          x = 1;
+          break;
+        case 'SHR':
+          x = 2;
+          break;
+        case 'PNT':
+          x = 3;
+          break;
+        case 'SHO':
+          x = 4;
+          break;
+      }
+      const new_outfit = await fetchRerollOutfit(outfit);
+      console.log(new_outfit);
+
+      var outfit_tile_current = document.getElementById(x + "-1");
+      outfit_tile_current.childNodes[0].textContent = new_outfit["article_reroll_current"][0]["name"];
+      outfit_tile_current.childNodes[1].src = new_outfit["article_reroll_current"][0]["image"];
+
+      var outfit_tile_tomorrow = document.getElementById(x + "-2");
+      outfit_tile_tomorrow.childNodes[0].textContent = new_outfit["article_reroll_tomorrow"][0]["name"];
+      outfit_tile_tomorrow.childNodes[1].src = new_outfit["article_reroll_tomorrow"][0]["image"];
+
+      var outfit_tile_two_days = document.getElementById(x + "-3");
+      outfit_tile_two_days.childNodes[0].textContent = new_outfit["article_reroll_two_days"][0]["name"];
+      outfit_tile_two_days.childNodes[1].src = new_outfit["article_reroll_two_days"][0]["image"];
     }
   </script>
 
@@ -171,14 +217,14 @@
     {% for type in outfit %}
       <div class="row">
         <div class="col-3 text-center">
-          <button class="btn tile_header mt-3">
+          <button class="btn tile_header mt-3" onclick="rerollOutfit('{% cycle 'HAT' 'SHR' 'PNT' 'SHO' %}')">
             {% cycle 'Hats' 'Shirts' 'Pants' 'Shoes' %}
           </button>      
         </div>
         
         {% for article in type %}
         <div class="col-3 text-center">
-          <button class="btn tile_clothe_placeholder mt-3">
+          <button class="btn tile_clothe_placeholder mt-3" id="{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
             {{ article.name }}
             <img src="{{ article.image }}" alt="{{ article.name }}" class="tile_image">
           </button>
@@ -202,16 +248,16 @@
       <tbody>
         <tr>
           <th scope="row">Adjusted Temperature (F°)</th>
-          <td>{{ comfort_current }}</td>
-          <td>{{ comfort_six_hours }}</td>
-          <td>{{ comfort_twelve_hours }}</td>
+          <td id="comfort_current">{{ comfort_current }}</td>
+          <td id="comfort_tomorrow">{{ comfort_six_hours }}</td>
+          <td id="comfort_two_days">{{ comfort_twelve_hours }}</td>
         </tr>
-        <tr>
+        <!-- <tr>
           <th scope="row">Outfit Waterproofness (%)</th>
           <td>{{ waterproofing_current }}</td>
           <td>{{ waterproofing_six_hours }}</td>
           <td>{{ waterproofing_twelve_hours }}</td>
-        </tr>
+        </tr> -->
       </tbody>
     </table>
   </div>

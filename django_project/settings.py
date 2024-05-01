@@ -120,6 +120,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+LOGOUT_REDIRECT_URL = '/'
 
 # MEDIA ROOT is the file path to the image files, MEDIA URL is the URL to access those files
 MEDIA_ROOT = 'weather_app/media/' # os.path.join(BASE_DIR, 'weather_app/media/')
