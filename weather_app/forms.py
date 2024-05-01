@@ -56,3 +56,4 @@ class AddForm(ModelForm):
           }
       )
     }
+    

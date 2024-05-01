@@ -269,6 +269,10 @@ class GenericClothes(models.Model):
 
 
 class Location(models.Model):
+  """
+  I don't actually think this is used.
+  """
+  
   name = models.CharField(max_length=30)
 
   def __str__(self):
@@ -276,6 +280,9 @@ class Location(models.Model):
 
 
 class Weather(models.Model):
+  """
+  This might have a lot of unecessary fields.
+  """
 
   location = models.ForeignKey(Location, on_delete=models.CASCADE)
   temperature = models.FloatField()
@@ -286,6 +293,9 @@ class Weather(models.Model):
   date = models.DateTimeField()
 
   def __str__(self):
+    """
+    Returns a string of the location
+    """
     return str(self.location)
 
   def _get_weather(latitude, longitude):
@@ -441,7 +451,9 @@ class AppUser(models.Model):
   # inventory = models.ManyToManyField(GenericClothes, related_name='users')
   
   def __str__(self):
+    """ Return user name """
     return self.name
+    
   def get_absolute_url(self):
     return reverse('user-detail', args=[str(self.id)])
     

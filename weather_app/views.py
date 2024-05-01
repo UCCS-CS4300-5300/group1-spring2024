@@ -1,21 +1,24 @@
-import os
-import boto3
+"""
+Views for weather_app. See https://docs.djangoproject.com/en/5.0/topics/http/views/ 
+for documentation.
+"""
+
+# import os
+# import boto3
+# from datetime import datetime
 import logging
-from datetime import datetime
 from itertools import zip_longest
 from rest_framework import status
 from dotenv import load_dotenv
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import redirect, render
 from django.views import View
 from django.contrib import messages
 from django.contrib.auth.models import Group
 from django.contrib import messages
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from .models import Weather, GenericClothes, AppUser
 from .forms import CreateUserForm, AddForm
@@ -23,9 +26,7 @@ from .decorators import allowed_users
 from .utils import get_xth_hour_weather
 
 # Load environment variables from .env file
-load_dotenv()
-
-import logging
+# load_dotenv()
 logger = logging.getLogger("test_logger")
 
 def recommendation_reroll(request):
@@ -136,6 +137,9 @@ class GenericClothesListView(View):
   model = GenericClothes
 
   def transform_field_name(self, field_name):
+    """
+    Convert field name to all caps without underscores
+    """
     return field_name.capitalize().replace("_", " ")
     
   @method_decorator(login_required(login_url='login'), name='dispatch')
@@ -153,7 +157,7 @@ class GenericClothesListView(View):
     # Get field model names for the context so frontend knows what options we can query clothing by
     context = {}
     field_name = request.GET.get('filterBy')
-    if field_name == None:
+    if field_name is None:
       field_name = "name" # If no filter is provided sort by name by default
     logger.debug(field_name)
     fields = self.model._meta.get_fields()
@@ -197,20 +201,30 @@ class WeatherView(View):
       }
 
       return render(request, 'weather_app/index.html', context)
-    else:
-      return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/index.html', context={'error_message': 'Please enter a valid location'})
 
-#register for an account
+    return render(request, status=status.HTTP_206_PARTIAL_CONTENT, template_name='weather_app/index.html', context={'error_message': 'Please enter a valid location'})
+
 class RegisterUser(View):
-  #handle get request
+  """
+  register for an account
+  """
+  
   def get(self, request):
-    #create a form instance and populate it with data from the request
+    """
+    handle get request
+    
+    create a form instance and populate it with data from the request
+    """
+    
     form = CreateUserForm()
     context = {'form': form} #context is used to pass data to the template
     return render(request, 'registration/register.html', context) #render request for html
 
-  #handle post request
   def post(self, request):
+    """
+    handle post request
+    """
+    
     form = CreateUserForm()
     if request.method == 'POST':
       form = CreateUserForm(request.POST)
@@ -228,50 +242,55 @@ class RegisterUser(View):
     context = {'form': form}
     return render(request, 'registration/register.html', context) 
 
-#adds items to inventory
 def addItem(request):
-    form = AddForm()
+  """
+  adds items to inventory
+  """
+  form = AddForm()
 
-    if request.method == 'POST':
+  if request.method == 'POST':
 
-      form = AddForm(request.POST,  request.FILES)
+    form = AddForm(request.POST,  request.FILES)
+    
+    if form.is_valid():
+      # Code does not work, always redirects to error.html (which doesn't exist by the way) 
+      # even with env in same directory as manage.py
+      # Also AWS is currently incompatible with what we have and its easier to change
+      # this than the recommendation algorithm
+      # image_file = request.FILES['photo']
+      # timestamp = datetime.now().strftime('%Y%m%d')
+
+      # # Upload the image to S3
+      # s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+      # image_path = f'inventory/photos/{image_file.name}_{timestamp}'
+
+      # try:
+      #     s3.upload_fileobj(image_file, os.getenv('AWS_STORAGE_BUCKET_NAME'), image_path)
+      # except Exception as e:
+      #     # Handle the exception, perhaps log it
+      #     print(f"Error uploading image to S3: {e}")
+      #     return render(request, 'weather_app/error.html', {'message': 'Error uploading image. Please try again.'})
+
+      # # Generate the image URL
+      # image_url = f"https://{os.getenv('AWS_STORAGE_BUCKET_NAME')}.s3.amazonaws.com/{image_path}"
+
+      # # Save the image URL to the form
+      # form.instance.image_url = image_url
+      # form.instance.photo = None
       
-      if form.is_valid():
-        # Code does not work, always redirects to error.html (which doesn't exist by the way) 
-        # even with env in same directory as manage.py
-        # Also AWS is currently incompatible with what we have and its easier to change
-        # this than the recommendation algorithm
-        # image_file = request.FILES['photo']
-        # timestamp = datetime.now().strftime('%Y%m%d')
+      post = form.save(commit=False)
+      post.save()
 
-        # # Upload the image to S3
-        # s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
-        # image_path = f'inventory/photos/{image_file.name}_{timestamp}'
+      return redirect('inventory')
 
-        # try:
-        #     s3.upload_fileobj(image_file, os.getenv('AWS_STORAGE_BUCKET_NAME'), image_path)
-        # except Exception as e:
-        #     # Handle the exception, perhaps log it
-        #     print(f"Error uploading image to S3: {e}")
-        #     return render(request, 'weather_app/error.html', {'message': 'Error uploading image. Please try again.'})
+  context = {'form': form}
+  return render(request, 'weather_app/add_item.html', context)
 
-        # # Generate the image URL
-        # image_url = f"https://{os.getenv('AWS_STORAGE_BUCKET_NAME')}.s3.amazonaws.com/{image_path}"
-
-        # # Save the image URL to the form
-        # form.instance.image_url = image_url
-        # form.instance.photo = None
-        
-        post = form.save(commit=False)
-        post.save()
-
-        return redirect('inventory')
-
-    context = {'form': form}
-    return render(request, 'weather_app/add_item.html', context)
-
-#deletes an item from the inventory
 def deleteItem(request, id):
+  """
+  deletes an item from the inventory
+  """
+  
   post = GenericClothes.objects.get(id = id)
 
   if request.method == 'POST':

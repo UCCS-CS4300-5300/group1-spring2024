@@ -21,7 +21,6 @@ from django.contrib import admin
 from django.urls import path, include
 from .views import WeatherView, TemperatureView, GenericClothesListView, RegisterUser, recommendation_reroll
 from . import views
-from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
