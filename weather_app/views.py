@@ -6,19 +6,16 @@ for documentation.
 # import os
 # import boto3
 # from datetime import datetime
-import logging
 from itertools import zip_longest
 from rest_framework import status
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.views import View
 from django.contrib import messages
 from django.contrib.auth.models import Group
-from django.contrib import messages
 from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from .models import Weather, GenericClothes, AppUser
 from .forms import CreateUserForm, AddForm
@@ -27,7 +24,6 @@ from .utils import get_xth_hour_weather
 
 # Load environment variables from .env file
 # load_dotenv()
-logger = logging.getLogger("test_logger")
 
 def recommendation_reroll(request):
   """
@@ -90,39 +86,39 @@ class TemperatureView(View):
         # which then gets the outfits, which then is rendered.
         # Really no business logic is here, except getting the data in the proper form.
         
-        current = GenericClothes.get_outfit_recommendation(*get_xth_hour_weather(0, weather_data), 
+        current_recommendation = GenericClothes.get_outfit_recommendation(*get_xth_hour_weather(0, weather_data), 
                                                            tolerance_offset, 
                                                            working_offset)
         
-        next = GenericClothes.get_outfit_recommendation(*get_xth_hour_weather(24, weather_data), 
+        next_recommendation = GenericClothes.get_outfit_recommendation(*get_xth_hour_weather(24, weather_data), 
                                                         tolerance_offset, 
                                                         working_offset)
         
-        final = GenericClothes.get_outfit_recommendation(*get_xth_hour_weather(48, weather_data), 
+        final_recommendation = GenericClothes.get_outfit_recommendation(*get_xth_hour_weather(48, weather_data), 
                                                          tolerance_offset, 
                                                          working_offset)
 
-        context["waterproofing_current"] = current['waterproofness']
-        context["waterproofing_six_hours"] = next['waterproofness']
-        context["waterproofing_twelve_hours"] = final['waterproofness']
+        context["waterproofing_current"] = current_recommendation['waterproofness']
+        context["waterproofing_six_hours"] = next_recommendation['waterproofness']
+        context["waterproofing_twelve_hours"] = final_recommendation['waterproofness']
 
-        context["comfort_current"] = round(current['comfort'], 2)
-        context["comfort_six_hours"] = round(next['comfort'], 2)
-        context["comfort_twelve_hours"] = round(final['comfort'], 2)
+        context["comfort_current"] = round(current_recommendation['comfort'], 2)
+        context["comfort_six_hours"] = round(next_recommendation['comfort'], 2)
+        context["comfort_twelve_hours"] = round(final_recommendation['comfort'], 2)
 
-        context["outfit"] = list(zip(current['outfit'], next['outfit'], final['outfit']))
+        context["outfit"] = list(zip(current_recommendation['outfit'], next_recommendation['outfit'], final_recommendation['outfit']))
 
         context["rain_outfit"] = list(
           zip_longest(
-            current['precipitation_outfit'], 
-            next['precipitation_outfit'], 
-            final['precipitation_outfit'], 
+            current_recommendation['precipitation_outfit'], 
+            next_recommendation['precipitation_outfit'], 
+            final_recommendation['precipitation_outfit'], 
             fillvalue="Missing..."
           )
         )
 
         if color_selected:
-          context["colors_current"] = current['colors']
+          context["colors_current"] = current_recommendation['colors']
 
       except Exception as e:
         context["error"] = f"Error, please try again. Error message: {e}"
@@ -144,22 +140,16 @@ class GenericClothesListView(View):
     
   @method_decorator(login_required(login_url='login'), name='dispatch')
   @method_decorator(allowed_users(allowed_roles=['user']))
-  def get(self, request, *args, **kwargs): # previously def get(self, request, *args, **kwargs): 
-    # user = get_object_or_404(AppUser, pk=user_id)
+  def get(self, request):
     
     """
     Get inventory data
     """
-    #DATA FOR TESTING
-    # test_cloth = self.model(name="nade", clothing_type="SHO", comfort_low=10, comfort_high=20, waterproof_rating=400)
-    # test_cloth.save()
-    
     # Get field model names for the context so frontend knows what options we can query clothing by
     context = {}
     field_name = request.GET.get('filterBy')
     if field_name is None:
       field_name = "name" # If no filter is provided sort by name by default
-    logger.debug(field_name)
     fields = self.model._meta.get_fields()
     
     context["generic_clothes_fields"] = [field.name for field in fields] # Only send field names to make filtering easier on frontend
@@ -235,14 +225,14 @@ class RegisterUser(View):
         group = Group.objects.get_or_create(name='user')[0] # used to be user__role
         user.groups.add(group)
 
-        app_user = AppUser.objects.create(username=username)
+        AppUser.objects.create(username=username)
 
         messages.success(request, 'Account was created for ' + username)
         return redirect('login') #after successful registration, redirect to login page
     context = {'form': form}
     return render(request, 'registration/register.html', context) 
 
-def addItem(request):
+def add_item(request):
   """
   adds items to inventory
   """
@@ -286,7 +276,7 @@ def addItem(request):
   context = {'form': form}
   return render(request, 'weather_app/add_item.html', context)
 
-def deleteItem(request, id):
+def delete_item(request, id):
   """
   deletes an item from the inventory
   """

@@ -4,6 +4,7 @@ import requests
 import requests_cache
 from django.core import validators
 from django.db import models
+from django.urls import reverse
 from geopy.geocoders import Nominatim
 from django_resized import ResizedImageField
 from .utils import calculate_heat_index, calculate_windchill
@@ -113,7 +114,6 @@ class GenericClothes(models.Model):
     """
 
     context = {}
-    waterproof_average = 0
     
     if comfort < -460 or comfort > 6100:
       raise ValueError("Comfort must be in range -460 (absolute zero) and 6100 (melting point of tungsten).")
